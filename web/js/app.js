@@ -13,6 +13,41 @@ const API_BASE = (function() {
 let currentUser = null;
 let authToken = localStorage.getItem('authToken') || null;
 
+// Validate user session on app startup
+async function validateUserSession() {
+  if (!authToken) return false;
+  
+  try {
+    // Try to fetch user profile to validate session
+    const response = await fetch(`${API_BASE}/auth/profile`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      currentUser = await response.json();
+      return true;
+    } else if (response.status === 401 || response.status === 404) {
+      // User not found or unauthorized - clear session
+      console.log('User session invalid, clearing localStorage');
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('authToken');
+      return false;
+    } else {
+      // Other error - keep session but log
+      console.warn('Session validation failed:', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error('Session validation error:', error);
+    // On network error, keep existing session
+    return !!authToken;
+  }
+}
+
 // Fetch with auth header
 async function apiCall(endpoint, method = 'GET', body = null) {
   const options = {
@@ -27,11 +62,13 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, options);
     if (!res.ok) {
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 404) {
+        // User deleted or session expired
         authToken = null;
+        currentUser = null;
         localStorage.removeItem('authToken');
         navigate('login');
-        throw new Error('Unauthorized');
+        throw new Error('Session expired or account deleted');
       }
       throw new Error(`API Error: ${res.statusText}`);
     }
@@ -51,12 +88,15 @@ function navigate(page) {
   render();
 }
 
-function render() {
+async function render() {
   const root = document.getElementById('app-root');
   if (!root) return;
   
-  // Show login if not authenticated
-  if (!authToken && currentPage !== 'login' && currentPage !== 'register') {
+  // Validate user session before rendering
+  const isValidSession = await validateUserSession();
+  
+  // Show login if not authenticated or session invalid
+  if (!isValidSession && currentPage !== 'login' && currentPage !== 'register') {
     currentPage = 'login';
   }
 
