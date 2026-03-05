@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "id": "2819564f-8c08-4c39-9f44-26e7eeb4b432",
+      "name": "Admin 1",
+      "email": "ka3000@hw.ac.uk",
+      "passwordHash": "b30a23787b95fd7d294b61f9b679db483be497d1843731c095095ec15841de8e3b92f0649f5b5b1b752d8d785728ebd250feb4b00053678a2084b890060bdf1d",
+      "salt": "7a5b63ddcad958f752edba45446d9172",
+      "language": "en",
+      "role": "admin",
+      "profile": {
+        "age": null,
+        "height": null,
+        "weight": null,
+        "bloodType": null,
+        "allergies": "",
+        "medications": "",
+        "medicalHistory": "",
+        "emergencyContact": "",
+        "phoneNumber": ""
+      },
+      "createdAt": "2026-03-05T07:44:26.196Z"
+    },
+    {
+      "id": "74e8c44e-4a1d-4b8b-a222-1a0533d21a15",
+      "name": "Admin 2",
+      "email": "abdullakaisar@outlook.com",
+      "passwordHash": "0b620f003b5e9dca94bce6b7cb4e826e9e331adcd8f226b757e17d0879e9cf5a1a8ba3548915ed6211fc4963191cefcdf6c1e8fbed927350508d678a38612ac8",
+      "salt": "0849d146647100bfadafbec5984338ce",
+      "language": "en",
+      "role": "admin",
+      "profile": {
+        "age": null,
+        "height": null,
+        "weight": null,
+        "bloodType": null,
+        "allergies": "",
+        "medications": "",
+        "medicalHistory": "",
+        "emergencyContact": "",
+        "phoneNumber": ""
+      },
+      "createdAt": "2026-03-05T07:44:26.307Z"
+    },
+    {
+      "id": "ff1596fb-5003-4c97-9fdc-069bd8f72fef",
+      "name": "Admin 3",
+      "email": "deobat72@gmail.com",
+      "passwordHash": "87c33de021c9a790936227aa61e43a3c7d7e7272acda1b083ac53fd2864de09e3d005d56923ad54a90b24cd65a46f876ec4d4ee29f21a3fd8adf395e3fb7754d",
+      "salt": "8435af0915eeba1400d5da3c009089d3",
+      "language": "en",
+      "role": "admin",
+      "profile": {
+        "age": null,
+        "height": null,
+        "weight": null,
+        "bloodType": null,
+        "allergies": "",
+        "medications": "",
+        "medicalHistory": "",
+        "emergencyContact": "",
+        "phoneNumber": ""
+      },
+      "createdAt": "2026-03-05T07:44:26.408Z"
+    }
+  ],
+  "symptoms": [],
+  "reminders": []
+}
