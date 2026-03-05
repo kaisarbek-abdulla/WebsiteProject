@@ -4,3 +4,6 @@ node_modules/
 *.log
 dist/
 build/
+
+# Figma exports (contain embedded secrets)
+Healthcare Virtual Assistant*

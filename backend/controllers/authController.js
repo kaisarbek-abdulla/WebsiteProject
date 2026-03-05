@@ -15,8 +15,8 @@ exports.register = async (req, res) => {
   const { name, email, password, language, role } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   
-  const validRoles = ['user', 'doctor', 'admin'];
-  const userRole = (role && validRoles.includes(role)) ? role : 'user';
+  const validRoles = ['patient', 'doctor'];
+  const userRole = (role && validRoles.includes(role)) ? role : 'patient';
   
   const exists = store.users.find(u => u.email === email.toLowerCase());
   if (exists) return res.status(409).json({ error: 'User already exists' });
@@ -100,6 +100,68 @@ exports.getUser = async (req, res) => {
     profile: user.profile || {}
   };
   res.json(safe);
+};
+
+exports.getPatients = async (req, res) => {
+  if (req.user.role !== 'doctor') return res.status(403).json({ error: 'Access denied' });
+  try {
+    let patients = [];
+    if (db) {
+      const snapshot = await db.collection('users').where('role', '==', 'patient').get();
+      patients = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          profile: data.profile || {}
+        };
+      });
+    } else {
+      patients = store.users.filter(u => u.role === 'patient').map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        profile: u.profile || {}
+      }));
+    }
+    res.json(patients);
+  } catch (e) {
+    console.error('Get patients failed:', e.message);
+    res.status(500).json({ error: 'Failed to get patients' });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
+  try {
+    let users = [];
+    if (db) {
+      const snapshot = await db.collection('users').get();
+      users = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          profile: data.profile || {}
+        };
+      });
+    } else {
+      users = store.users.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        profile: u.profile || {}
+      }));
+    }
+    res.json(users);
+  } catch (e) {
+    console.error('Get all users failed:', e.message);
+    res.status(500).json({ error: 'Failed to get users' });
+  }
 };
 
 exports.updateProfile = async (req, res) => {

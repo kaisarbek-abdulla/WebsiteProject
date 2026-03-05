@@ -33,10 +33,12 @@ app.get('/', (req, res) => {
 const authRouter = require('./routes/auth');
 const symptomsRouter = require('./routes/symptoms');
 const remindersRouter = require('./routes/reminders');
+const complaintsRouter = require('./routes/complaints');
 
 app.use('/api/auth', authRouter);
 app.use('/api/symptoms', symptomsRouter);
 app.use('/api/reminders', remindersRouter);
+app.use('/api/complaints', complaintsRouter);
 
 // Start background workers
 try {

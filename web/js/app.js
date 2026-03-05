@@ -98,6 +98,10 @@ function render() {
       root.innerHTML = renderProfile();
       attachProfileHandlers();
       break;
+    case 'complaints':
+      root.innerHTML = renderComplaints();
+      attachComplaintsHandlers();
+      break;
     default:
       root.innerHTML = renderDashboard();
   }
@@ -181,9 +185,8 @@ function renderRegister() {
         <div class="form-group">
           <label>👨‍⚕️ I am a...</label>
           <select id="register-role">
-            <option value="user">🏥 Patient (User)</option>
+            <option value="patient">🏥 Patient</option>
             <option value="doctor">👨‍⚕️ Doctor</option>
-            <option value="admin">🔧 Administrator</option>
           </select>
         </div>
         
@@ -223,6 +226,17 @@ function attachRegisterHandlers() {
 
 // ===== DASHBOARD PAGE =====
 function renderDashboard() {
+  const role = currentUser ? currentUser.role : 'patient';
+  if (role === 'doctor') {
+    return renderDoctorDashboard();
+  } else if (role === 'admin') {
+    return renderAdminDashboard();
+  } else {
+    return renderPatientDashboard();
+  }
+}
+
+function renderPatientDashboard() {
   return `
     ${renderHeader()}
     ${renderNav()}
@@ -316,7 +330,41 @@ function renderDashboard() {
   `;
 }
 
+function renderDoctorDashboard() {
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="card">
+        <h2>Doctor Dashboard</h2>
+        <p>View and manage your patients.</p>
+        <div id="patients-list"></div>
+      </div>
+    </main>${renderFooter()}`;
+}
+
+function renderAdminDashboard() {
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="card">
+        <h2>Admin Dashboard</h2>
+        <p>Manage users and complaints.</p>
+        <div id="users-list"></div>
+        <div id="complaints-list"></div>
+      </div>
+    </main>${renderFooter()}`;
+}
+
 function attachDashboardHandlers() {
+  const role = currentUser ? currentUser.role : 'patient';
+  if (role === 'patient') {
+    attachPatientDashboardHandlers();
+  } else if (role === 'doctor') {
+    attachDoctorDashboardHandlers();
+  } else if (role === 'admin') {
+    attachAdminDashboardHandlers();
+  }
+}
+
+function attachPatientDashboardHandlers() {
   const analyzeBtn = document.getElementById('analyze-btn');
   const symptomInput = document.getElementById('symptom-input');
   const resultDiv = document.getElementById('analysis-result');
@@ -442,6 +490,76 @@ function attachDashboardHandlers() {
   }
 }
 
+function attachDoctorDashboardHandlers() {
+  loadPatients();
+}
+
+async function loadPatients() {
+  try {
+    const patients = await apiCall('/auth/patients/all', 'GET');
+    const listDiv = document.getElementById('patients-list');
+    if (patients.length === 0) {
+      listDiv.innerHTML = '<p>No patients found.</p>';
+      return;
+    }
+    let html = '<h3>Patients</h3><ul>';
+    patients.forEach(p => {
+      html += `<li><strong>${p.name}</strong> (${p.email}) - Age: ${p.profile.age || 'N/A'}, Height: ${p.profile.height || 'N/A'}, Weight: ${p.profile.weight || 'N/A'}</li>`;
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load patients failed:', err);
+  }
+}
+
+function attachAdminDashboardHandlers() {
+  loadUsers();
+  loadComplaints();
+}
+
+async function loadUsers() {
+  try {
+    const users = await apiCall('/auth/users/all', 'GET');
+    const listDiv = document.getElementById('users-list');
+    if (users.length === 0) {
+      listDiv.innerHTML = '<p>No users found.</p>';
+      return;
+    }
+    let html = '<h3>All Users</h3><ul>';
+    users.forEach(u => {
+      html += `<li><strong>${u.name}</strong> (${u.email}) - Role: ${u.role} - Age: ${u.profile.age || 'N/A'}, Height: ${u.profile.height || 'N/A'}, Weight: ${u.profile.weight || 'N/A'}</li>`;
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load users failed:', err);
+  }
+}
+
+async function loadComplaints() {
+  try {
+    const complaints = await apiCall('/complaints', 'GET');
+    const listDiv = document.getElementById('complaints-list');
+    if (complaints.length === 0) {
+      listDiv.innerHTML = '<p>No complaints found.</p>';
+      return;
+    }
+    let html = '<h3>Complaints</h3><ul>';
+    complaints.forEach(c => {
+      html += `<li><strong>${new Date(c.createdAt).toLocaleString()}</strong>: ${c.message} (${c.status})`;
+      if (c.user) {
+        html += ` - User: ${c.user.name} (${c.user.email}, ${c.user.role})`;
+      }
+      html += '</li>';
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load complaints failed:', err);
+  }
+}
+
 // ===== OTHER PAGES (STUB) =====
 function renderSymptoms() {
   return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Symptoms</h2><p>Track and manage your symptoms here.</p></div></main>${renderFooter()}`;
@@ -471,6 +589,64 @@ function renderNutrition() {
 
 function renderReports() {
   return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Reports</h2><p>View your health reports.</p></div></main>${renderFooter()}`;
+}
+
+function renderComplaints() {
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="card">
+        <h2>Complaints</h2>
+        <p>Submit a complaint or view your complaints.</p>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="complaint-message" placeholder="Describe your complaint..."></textarea>
+        </div>
+        <button id="submit-complaint-btn" class="btn primary">Submit Complaint</button>
+        <div id="complaints-list" style="margin-top:20px;"></div>
+      </div>
+    </main>${renderFooter()}`;
+}
+
+function attachComplaintsHandlers() {
+  document.getElementById('submit-complaint-btn').addEventListener('click', async () => {
+    const message = document.getElementById('complaint-message').value.trim();
+    if (!message) {
+      alert('Please enter a message');
+      return;
+    }
+    try {
+      await apiCall('/complaints', 'POST', { message });
+      alert('Complaint submitted successfully');
+      document.getElementById('complaint-message').value = '';
+      loadComplaints();
+    } catch (err) {
+      console.error('Submit complaint failed:', err);
+    }
+  });
+  loadComplaints();
+}
+
+async function loadComplaints() {
+  try {
+    const complaints = await apiCall('/complaints', 'GET');
+    const listDiv = document.getElementById('complaints-list');
+    if (complaints.length === 0) {
+      listDiv.innerHTML = '<p>No complaints found.</p>';
+      return;
+    }
+    let html = '<h3>Your Complaints</h3><ul>';
+    complaints.forEach(c => {
+      html += `<li><strong>${new Date(c.createdAt).toLocaleString()}</strong>: ${c.message} (${c.status})`;
+      if (currentUser.role === 'admin' && c.user) {
+        html += ` - User: ${c.user.name} (${c.user.email}, ${c.user.role})`;
+      }
+      html += '</li>';
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load complaints failed:', err);
+  }
 }
 
 function renderProfile() {
@@ -642,6 +818,7 @@ function renderNav() {
         <button class="nav-item ${currentPage === 'vitals' ? 'active' : ''}" onclick="navigate('vitals')">❤️ Vitals</button>
         <button class="nav-item ${currentPage === 'nutrition' ? 'active' : ''}" onclick="navigate('nutrition')">🍽️ Nutrition</button>
         <button class="nav-item ${currentPage === 'reports' ? 'active' : ''}" onclick="navigate('reports')">📊 Reports</button>
+        <button class="nav-item ${currentPage === 'complaints' ? 'active' : ''}" onclick="navigate('complaints')">📝 Complaints</button>
       </div>
     </nav>
   `;
