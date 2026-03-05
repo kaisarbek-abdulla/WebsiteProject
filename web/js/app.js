@@ -756,8 +756,15 @@ function attachProfileHandlers() {
         // Re-render to show the loaded data
         render();
       } catch (err) {
-        console.error('Failed to load profile:', err);
-        alert('Failed to load profile data');
+        if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('Unauthorized')) {
+          console.error('User account not found or deleted. Logging out...');
+          alert('Your account was not found. You have been logged out.');
+          logout();
+        } else {
+          console.error('Failed to load profile:', err);
+          alert('Failed to load profile data. Please try again.');
+          navigate('dashboard');
+        }
       }
     })();
   } else {
@@ -768,9 +775,7 @@ function attachProfileHandlers() {
 
 function attachProfileFormHandlers() {
   document.getElementById('logout-btn').addEventListener('click', () => {
-    authToken = null;
-    localStorage.removeItem('authToken');
-    navigate('login');
+    logout();
   });
   
   document.getElementById('cancel-profile').addEventListener('click', () => {
@@ -807,6 +812,13 @@ function attachProfileFormHandlers() {
 }
 
 // ===== SHARED COMPONENTS =====
+function logout() {
+  authToken = null;
+  localStorage.removeItem('authToken');
+  currentUser = null;
+  navigate('login');
+}
+
 function renderHeader() {
   const roleLabel = currentUser ? ({ patient: 'Patient', doctor: 'Doctor', admin: 'Administrator' }[currentUser.role] || 'User') : 'User';
   return `
@@ -822,6 +834,7 @@ function renderHeader() {
       </div>
       <div class="topbar-right">
         <button class="logout" onclick="navigate('profile')">Profile ⟶</button>
+        <button class="logout" onclick="logout()" style="background-color:#d32f2f; color:white; margin-left:8px; padding:8px 16px; border:none; border-radius:4px; cursor:pointer;">Logout</button>
       </div>
     </header>
   `;
