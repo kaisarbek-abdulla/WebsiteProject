@@ -231,3 +231,98 @@ exports.getProfile = async (req, res) => {
   };
   res.json(safe);
 };
+
+exports.updateUser = async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
+  
+  const id = req.params.id;
+  const { name, email, role } = req.body;
+  
+  if (!name && !email && !role) {
+    return res.status(400).json({ error: 'At least one field is required' });
+  }
+  
+  let user = null;
+  if (db) {
+    try {
+      const doc = await db.collection('users').doc(id).get();
+      if (doc.exists) user = doc.data();
+    } catch (e) {
+      console.error('Firestore getUser failed:', e.message);
+    }
+  } else {
+    user = store.users.find(u => u.id === id);
+  }
+  
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  
+  // Check if new email already exists (if changing email)
+  if (email && email.toLowerCase() !== user.email) {
+    const exists = db ? 
+      !(await db.collection('users').where('email', '==', email.toLowerCase()).limit(1).get()).empty :
+      store.users.some(u => u.email === email.toLowerCase() && u.id !== id);
+    if (exists) return res.status(409).json({ error: 'Email already in use' });
+  }
+  
+  if (name) user.name = name;
+  if (email) user.email = email.toLowerCase();
+  if (role && ['patient', 'doctor', 'admin'].includes(role)) user.role = role;
+  
+  if (db) {
+    try {
+      await db.collection('users').doc(id).update(user);
+    } catch (e) {
+      console.error('Firestore update failed:', e.message);
+      return res.status(500).json({ error: 'Update failed' });
+    }
+  } else {
+    store.updateUser(id, user);
+  }
+  
+  const safe = { 
+    id: user.id, 
+    name: user.name, 
+    email: user.email, 
+    role: user.role, 
+    profile: user.profile || {}
+  };
+  res.json(safe);
+};
+
+exports.deleteUser = async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
+  
+  const id = req.params.id;
+  
+  // Prevent deleting yourself
+  if (id === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  
+  let user = null;
+  if (db) {
+    try {
+      const doc = await db.collection('users').doc(id).get();
+      if (doc.exists) user = doc.data();
+    } catch (e) {
+      console.error('Firestore getUser failed:', e.message);
+    }
+  } else {
+    user = store.users.find(u => u.id === id);
+  }
+  
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  
+  if (db) {
+    try {
+      await db.collection('users').doc(id).delete();
+    } catch (e) {
+      console.error('Firestore delete failed:', e.message);
+      return res.status(500).json({ error: 'Delete failed' });
+    }
+  } else {
+    store.deleteUser(id);
+  }
+  
+  res.json({ message: 'User deleted successfully' });
+};

@@ -344,13 +344,30 @@ function renderDoctorDashboard() {
 function renderAdminDashboard() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
-      <div class="card">
-        <h2>Admin Dashboard</h2>
-        <p>Manage users and complaints.</p>
-        <div id="users-list"></div>
+      <div style="margin-bottom:30px;">
+        <h2 style="font-size:32px; margin-bottom:8px; color:#0b0838;">👥 User Management</h2>
+        <p style="color:#99a0ac; margin-bottom:20px;">Manage system users, roles, and permissions</p>
+        <div id="users-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:16px; margin-bottom:30px;"></div>
+      </div>
+      
+      <div style="margin-top:40px; border-top:2px solid #e6e9ef; padding-top:30px;">
+        <h2 style="font-size:28px; margin-bottom:8px; color:#0b0838;">📋 System Complaints</h2>
+        <p style="color:#99a0ac; margin-bottom:20px;">Review and manage user complaints</p>
         <div id="complaints-list"></div>
       </div>
-    </main>${renderFooter()}`;
+    </main>
+    
+    <!-- User Edit Modal -->
+    <div id="user-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center;">
+      <div style="background:white; padding:30px; border-radius:14px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3 style="margin:0; color:#0b0838;">Edit User</h3>
+          <button onclick="closeUserModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#99a0ac;">&times;</button>
+        </div>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+    ${renderFooter()}`;
 }
 
 function attachDashboardHandlers() {
@@ -521,19 +538,134 @@ function attachAdminDashboardHandlers() {
 async function loadUsers() {
   try {
     const users = await apiCall('/auth/users/all', 'GET');
-    const listDiv = document.getElementById('users-list');
+    const gridDiv = document.getElementById('users-grid');
     if (users.length === 0) {
-      listDiv.innerHTML = '<p>No users found.</p>';
+      gridDiv.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#99a0ac; padding:40px;">No users found.</p>';
       return;
     }
-    let html = '<h3>All Users</h3><ul>';
+    let html = '';
     users.forEach(u => {
-      html += `<li><strong>${u.name}</strong> (${u.email}) - Role: ${u.role} - Age: ${u.profile.age || 'N/A'}, Height: ${u.profile.height || 'N/A'}, Weight: ${u.profile.weight || 'N/A'}</li>`;
+      const roleColor = u.role === 'admin' ? '#d32f2f' : u.role === 'doctor' ? '#2196f3' : '#4caf50';
+      const roleIcon = u.role === 'admin' ? '👨‍💼' : u.role === 'doctor' ? '👨‍⚕️' : '👤';
+      html += `
+        <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(20,30,60,0.06); border-left:4px solid ${roleColor}; transition:all 0.3s ease; cursor:pointer;" onmouseover="this.style.boxShadow='0 8px 20px rgba(20,30,60,0.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(20,30,60,0.06)'">
+          <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:24px;">${roleIcon}</span>
+              <div>
+                <h4 style="margin:0; color:#0b0838; font-size:16px;">${u.name}</h4>
+                <p style="margin:4px 0; color:#99a0ac; font-size:12px;">${u.email}</p>
+              </div>
+            </div>
+            <span style="background:${roleColor}; color:white; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase;">${u.role}</span>
+          </div>
+          
+          <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:12px; font-size:13px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div><span style="color:#99a0ac;">Age:</span> <strong style="color:#0b0838;">${u.profile?.age || 'N/A'}</strong></div>
+              <div><span style="color:#99a0ac;">Height:</span> <strong style="color:#0b0838;">${u.profile?.height || 'N/A'}</strong></div>
+              <div><span style="color:#99a0ac;">Weight:</span> <strong style="color:#0b0838;">${u.profile?.weight || 'N/A'}</strong></div>
+              <div><span style="color:#99a0ac;">Joined:</span> <strong style="color:#0b0838;">${new Date(u.createdAt).toLocaleDateString()}</strong></div>
+            </div>
+          </div>
+          
+          <div style="display:flex; gap:8px;">
+            <button onclick="openEditUserModal('${u.id}', '${u.name}', '${u.email}', '${u.role}')" style="flex:1; background:#2b67ff; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">✏️ Edit</button>
+            <button onclick="changeUserRole('${u.id}', '${u.role}')" style="flex:1; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">🔄 Role</button>
+            <button onclick="confirmDeleteUser('${u.id}', '${u.name}')" style="flex:1; background:#d32f2f; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">🗑️ Delete</button>
+          </div>
+        </div>
+      `;
     });
-    html += '</ul>';
-    listDiv.innerHTML = html;
+    gridDiv.innerHTML = html;
   } catch (err) {
     console.error('Load users failed:', err);
+    document.getElementById('users-grid').innerHTML = '<p style="grid-column:1/-1; color:red; text-align:center;">Failed to load users.</p>';
+  }
+}
+
+function openEditUserModal(userId, name, email, role) {
+  const modal = document.getElementById('user-modal');
+  const content = document.getElementById('modal-content');
+  content.innerHTML = `
+    <form style="display:flex; flex-direction:column; gap:12px;" onsubmit="handleUpdateUser(event, '${userId}')">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="edit-name" value="${name}" required style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="edit-email" value="${email}" required style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="edit-role" value="${role}" style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+          <option value="patient">Patient</option>
+          <option value="doctor">Doctor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="submit" style="flex:1; background:#2b67ff; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px;">Save Changes</button>
+        <button type="button" onclick="closeUserModal()" style="flex:1; background:#e6e9ef; color:#0b0838; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px;">Cancel</button>
+      </div>
+    </form>
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeUserModal() {
+  document.getElementById('user-modal').style.display = 'none';
+}
+
+async function handleUpdateUser(event, userId) {
+  event.preventDefault();
+  const name = document.getElementById('edit-name').value;
+  const email = document.getElementById('edit-email').value;
+  const role = document.getElementById('edit-role').value;
+  
+  try {
+    await apiCall(`/auth/users/${userId}`, 'PUT', { name, email, role });
+    alert('User updated successfully!');
+    closeUserModal();
+    loadUsers();
+  } catch (err) {
+    console.error('Update failed:', err);
+    alert('Failed to update user: ' + err.message);
+  }
+}
+
+async function changeUserRole(userId, currentRole) {
+  const roles = ['patient', 'doctor', 'admin'];
+  const nextRole = roles[(roles.indexOf(currentRole) + 1) % roles.length];
+  const confirm_msg = `Change user role from "${currentRole}" to "${nextRole}"?`;
+  
+  if (confirm(confirm_msg)) {
+    try {
+      await apiCall(`/auth/users/${userId}`, 'PUT', { role: nextRole });
+      alert(`Role changed to ${nextRole}!`);
+      loadUsers();
+    } catch (err) {
+      console.error('Role change failed:', err);
+      alert('Failed to change role: ' + err.message);
+    }
+  }
+}
+
+function confirmDeleteUser(userId, userName) {
+  if (confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+    deleteUser(userId, userName);
+  }
+}
+
+async function deleteUser(userId, userName) {
+  try {
+    await apiCall(`/auth/users/${userId}`, 'DELETE');
+    alert(`User "${userName}" deleted successfully!`);
+    loadUsers();
+  } catch (err) {
+    console.error('Delete failed:', err);
+    alert('Failed to delete user: ' + err.message);
   }
 }
 
@@ -542,21 +674,31 @@ async function loadComplaints() {
     const complaints = await apiCall('/complaints', 'GET');
     const listDiv = document.getElementById('complaints-list');
     if (complaints.length === 0) {
-      listDiv.innerHTML = '<p>No complaints found.</p>';
+      listDiv.innerHTML = '<div style="text-align:center; color:#99a0ac; padding:40px;">No complaints found.</div>';
       return;
     }
-    let html = '<h3>Complaints</h3><ul>';
+    let html = '<div style="display:grid; gap:12px;">';
     complaints.forEach(c => {
-      html += `<li><strong>${new Date(c.createdAt).toLocaleString()}</strong>: ${c.message} (${c.status})`;
-      if (c.user) {
-        html += ` - User: ${c.user.name} (${c.user.email}, ${c.user.role})`;
-      }
-      html += '</li>';
+      const statusColor = c.status === 'pending' ? '#ff9800' : c.status === 'resolved' ? '#4caf50' : '#99a0ac';
+      const statusIcon = c.status === 'pending' ? '⏳' : c.status === 'resolved' ? '✅' : '❓';
+      html += `
+        <div style="background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(20,30,60,0.06); border-left:4px solid ${statusColor};">
+          <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+            <div style="flex:1;">
+              <div style="font-size:12px; color:#99a0ac; margin-bottom:4px;">${new Date(c.createdAt).toLocaleString()}</div>
+              <p style="margin:0; color:#0b0838; line-height:1.5;">${c.message}</p>
+            </div>
+            <span style="background:${statusColor}; color:white; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; margin-left:12px; white-space:nowrap;">${statusIcon} ${c.status}</span>
+          </div>
+          ${c.user ? `<div style="background:#f5f5f5; padding:8px 12px; border-radius:8px; font-size:12px; color:#0b0838;"><strong>User:</strong> ${c.user.name} (${c.user.email}) • <strong>Role:</strong> ${c.user.role}</div>` : ''}
+        </div>
+      `;
     });
-    html += '</ul>';
+    html += '</div>';
     listDiv.innerHTML = html;
   } catch (err) {
     console.error('Load complaints failed:', err);
+    document.getElementById('complaints-list').innerHTML = '<p style="color:red; text-align:center;">Failed to load complaints.</p>';
   }
 }
 

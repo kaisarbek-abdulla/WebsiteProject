@@ -66,6 +66,13 @@ module.exports = {
       saveToFile();
     }
   },
+  deleteUser(id) {
+    const idx = data.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      data.users.splice(idx, 1);
+      saveToFile();
+    }
+  },
   addSymptom(symptom) {
     data.symptoms.push(symptom);
     saveToFile();

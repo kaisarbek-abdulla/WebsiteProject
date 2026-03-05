@@ -10,5 +10,7 @@ router.get('/profile', auth, controller.getProfile);
 router.get('/patients/all', auth, controller.getPatients);
 router.get('/users/all', auth, controller.getAllUsers);
 router.put('/:id/profile', auth, controller.updateProfile);
+router.put('/users/:id', auth, controller.updateUser);
+router.delete('/users/:id', auth, controller.deleteUser);
 
 module.exports = router;
