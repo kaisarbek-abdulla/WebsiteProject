@@ -1,0 +1,15 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.expo": true
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ]
+}

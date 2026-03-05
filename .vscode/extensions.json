@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "msjsdiag.debugger-for-chrome",
+    "ms-vscode.vscode-node-azure-pack",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "msjsdiag.vscode-react-native",
+    "expo.vscode-expo"
+  ]
+}

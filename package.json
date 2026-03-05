@@ -1,0 +1,27 @@
+{
+  "name": "website-project",
+  "version": "1.0.0",
+  "description": "Full-stack website project",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "start:web": "node backend/server.js",
+    "dev:web": "nodemon backend/server.js",
+    "start:mobile": "cd mobile && npm start"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.10.1"
+  },
+  "optionalDependencies": {
+    "firebase-admin": "^11.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}

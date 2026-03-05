@@ -1,0 +1,95 @@
+:root{
+  --bg:#eef6ff;
+  --card:#ffffff;
+  --muted:#99a0ac;
+  --primary:#2b67ff;
+  --accent:#0b0838;
+  --radius:14px;
+  --pad:18px;
+  --max:1200px;
+  --surface-shadow: 0 6px 20px rgba(20,30,60,0.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;color:#182026;background:linear-gradient(180deg,#eef6ff 0%, #f7fbff 100%);-webkit-font-smoothing:antialiased}
+
+/* Auth Pages */
+.auth-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.auth-card{background:#fff;width:100%;max-width:400px;padding:40px;border-radius:20px;box-shadow:var(--surface-shadow);text-align:center}
+.logo-large{font-size:48px;margin-bottom:20px}
+.auth-card h1{font-size:24px;margin-bottom:8px}
+.auth-card p{color:var(--muted);margin-bottom:30px}
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:14px}
+.form-group input{width:100%;padding:12px;border:1px solid #efeff2;border-radius:8px;font-size:14px}
+.form-group input:focus{outline:0;border-color:var(--primary);background:#f7f9ff}
+.form-group textarea{width:100%;padding:12px;border:1px solid #efeff2;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical}
+.form-group textarea:focus{outline:0;border-color:var(--primary);background:#f7f9ff}
+.form-group select{width:100%;padding:12px;border:1px solid #efeff2;border-radius:8px;font-size:14px;}
+.form-group select:focus{outline:0;border-color:var(--primary);background:#f7f9ff}
+.auth-switch{margin-top:20px;font-size:14px;color:var(--muted)}
+.auth-switch a{color:var(--primary);text-decoration:none;font-weight:600}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;background:transparent}
+.logo{display:flex;gap:12px;align-items:center}
+.logo-icon{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;background:#1e64ff;color:white;border-radius:10px;font-size:20px}
+.branding .app-title{font-weight:600;font-size:18px}
+.branding .app-sub{font-size:13px;color:var(--muted)}
+.logout{background:#fff;border:1px solid #e6e9ef;padding:8px 14px;border-radius:10px;cursor:pointer}
+
+.main-nav{padding:8px 22px}
+.nav-scroll{display:flex;gap:10px;background:rgba(255,255,255,0.9);padding:10px;border-radius:999px;box-shadow:var(--surface-shadow);overflow:auto}
+.nav-item{background:transparent;border:0;padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;color:#111}
+.nav-item.active{background:#fff;border:1px solid #e4e9ff}
+
+.container{max-width:var(--max);margin:18px auto;padding:10px 18px}
+.row{display:flex;gap:18px;margin-bottom:18px}
+.col-lg-8{flex:0 0 66%}
+.col-lg-4{flex:0 0 34%}
+
+.card{background:var(--card);padding:var(--pad);border-radius:var(--radius);box-shadow:var(--surface-shadow)}
+.symptom-card textarea{width:100%;min-height:90px;padding:14px;border-radius:10px;border:1px solid #efeff2;background:#fafafa}
+.symptom-card h3{margin-bottom:6px}
+.symptom-card .muted{color:var(--muted);margin-bottom:12px}
+.actions{display:flex;justify-content:flex-end;margin-top:12px}
+.btn{padding:12px 18px;border-radius:10px;border:0;cursor:pointer}
+.btn.primary{background:#66636a;color:#fff;width:100%}
+.btn.primary:disabled{opacity:0.6;cursor:not-allowed}
+.btn.full{width:100%}
+
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stat{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff)}
+.stat-title{font-size:14px;color:var(--muted)}
+.stat-value{font-size:28px;font-weight:700;margin:8px 0}
+.stat-sub{font-size:12px;color:var(--muted)}
+
+.metrics-list{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.metric{background:#fff;padding:12px;border-radius:12px;text-align:center;box-shadow:0 6px 12px rgba(15,25,40,0.04)}
+.metric-icon{font-size:20px;margin-bottom:8px}
+.metric-label{font-size:13px;color:#333}
+.metric-value{font-size:12px;color:var(--muted)}
+
+.cards-row .wide{padding:18px}
+.lower-row .half{flex:1}
+.empty-state{padding:40px;text-align:center;color:var(--muted);font-size:14px}
+
+.site-footer{text-align:center;padding:28px;color:var(--muted);font-size:13px}
+
+/* Responsive */
+@media (max-width: 900px){
+  .col-lg-8,.col-lg-4{flex:1}
+  .metrics-list{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:600px){
+  .nav-scroll{padding:8px;gap:8px}
+  .nav-item{padding:8px 10px;font-size:13px}
+  .row{flex-direction:column}
+  .metrics-list{grid-template-columns:repeat(2,1fr)}
+  .metric{padding:10px}
+  .stat{padding:10px}
+  .symptom-card textarea{min-height:72px}
+  .btn.primary{width:100%}
+  .auth-card{padding:30px 20px}
+}
+
+
