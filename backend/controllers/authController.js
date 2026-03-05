@@ -207,3 +207,28 @@ exports.updateProfile = async (req, res) => {
   };
   res.json(safe);
 };
+
+exports.getProfile = async (req, res) => {
+  const id = req.user.id;
+  let user = null;
+  if (db) {
+    try {
+      const doc = await db.collection('users').doc(id).get();
+      if (doc.exists) user = doc.data();
+    } catch (e) {
+      console.error('Firestore getProfile failed:', e.message);
+    }
+  } else {
+    user = store.users.find(u => u.id === id);
+  }
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const safe = { 
+    id: user.id, 
+    name: user.name, 
+    email: user.email, 
+    role: user.role, 
+    language: user.language,
+    profile: user.profile || {}
+  };
+  res.json(safe);
+};
