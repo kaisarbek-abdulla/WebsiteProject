@@ -650,7 +650,7 @@ async function loadComplaints() {
 }
 
 function renderProfile() {
-  if (!currentUser) {
+  if (!currentUser || !currentUser.profile) {
     return `<div class="container"><p>Loading profile...</p></div>`;
   }
   const profile = currentUser.profile || {};
@@ -673,7 +673,7 @@ function renderProfile() {
             </div>
             <div class="form-group">
               <label>Role</label>
-              <input type="text" value="${({user: 'Patient (User)', doctor: 'Doctor', admin: 'Administrator'}[currentUser.role] || 'User')}" disabled style="background-color:#f5f5f5; cursor:not-allowed;">
+              <input type="text" value="${({patient: 'Patient', doctor: 'Doctor', admin: 'Administrator'}[currentUser.role] || 'User')}" disabled style="background-color:#f5f5f5; cursor:not-allowed;">
             </div>
           </div>
           
@@ -747,6 +747,26 @@ function renderProfile() {
 }
 
 function attachProfileHandlers() {
+  if (!currentUser.profile) {
+    // Load user profile data first
+    (async () => {
+      try {
+        const userData = await apiCall(`/auth/${currentUser.id}`, 'GET');
+        currentUser = userData;
+        // Re-render to show the loaded data
+        render();
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        alert('Failed to load profile data');
+      }
+    })();
+  } else {
+    // Profile already loaded, attach handlers
+    attachProfileFormHandlers();
+  }
+}
+
+function attachProfileFormHandlers() {
   document.getElementById('logout-btn').addEventListener('click', () => {
     authToken = null;
     localStorage.removeItem('authToken');
@@ -788,7 +808,7 @@ function attachProfileHandlers() {
 
 // ===== SHARED COMPONENTS =====
 function renderHeader() {
-  const roleLabel = currentUser ? ({ user: 'Patient', doctor: 'Doctor', admin: 'Administrator' }[currentUser.role] || 'User') : 'User';
+  const roleLabel = currentUser ? ({ patient: 'Patient', doctor: 'Doctor', admin: 'Administrator' }[currentUser.role] || 'User') : 'User';
   return `
     <header class="topbar">
       <div class="topbar-left">
