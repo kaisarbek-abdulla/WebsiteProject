@@ -1,6 +1,7 @@
-const adminModule = require('./firebase/admin');
-const admin = adminModule.default || adminModule;
-const { db } = adminModule;
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const store = require('./models/inMemoryStore');
 
 async function createAdmins() {
   const admins = [
@@ -9,25 +10,28 @@ async function createAdmins() {
     { email: 'deobat72@gmail.com', name: 'Admin 3' }
   ];
 
-  if (!admin || !db) {
-    console.error('Firebase not initialized. Check your service account configuration.');
-    process.exit(1);
+  function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+    return { salt, hash };
   }
 
   for (const adminData of admins) {
     try {
-      // Create user in Firebase Auth
-      const userRecord = await admin.auth().createUser({
-        email: adminData.email,
-        password: 'TempPass123!', // Temporary password
-        displayName: adminData.name
-      });
+      const exists = store.users.find(u => u.email === adminData.email.toLowerCase());
+      if (exists) {
+        console.log(`Admin already exists: ${adminData.email}`);
+        continue;
+      }
 
-      // Create user document in Firestore
-      const userDoc = {
-        id: userRecord.uid,
+      const { salt, hash } = hashPassword('TempPass123!');
+      const user = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
         name: adminData.name,
-        email: adminData.email,
+        email: adminData.email.toLowerCase(),
+        passwordHash: hash,
+        salt,
+        language: 'en',
         role: 'admin',
         profile: {
           age: null,
@@ -43,8 +47,8 @@ async function createAdmins() {
         createdAt: new Date().toISOString()
       };
 
-      await db.collection('users').doc(userRecord.uid).set(userDoc);
-      console.log(`Admin created: ${adminData.email}`);
+      store.addUser(user);
+      console.log(`Admin created: ${adminData.email} (Password: TempPass123!)`);
     } catch (error) {
       console.error(`Error creating admin ${adminData.email}:`, error.message);
     }

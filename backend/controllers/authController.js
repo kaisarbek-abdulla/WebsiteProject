@@ -50,7 +50,7 @@ exports.register = async (req, res) => {
       console.error('Firestore write user failed:', e.message);
     }
   } else {
-    store.users.push(user);
+    store.addUser(user);
   }
   const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
   res.json({ userId: user.id, token, role: user.role });
@@ -193,8 +193,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(500).json({ error: 'Update failed' });
     }
   } else {
-    const idx = store.users.findIndex(u => u.id === id);
-    if (idx !== -1) store.users[idx] = user;
+    store.updateUser(id, user);
   }
   
   const safe = { 
