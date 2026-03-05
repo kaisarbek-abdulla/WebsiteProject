@@ -1,5 +1,6 @@
-const admin = require('firebase-admin');
-const { db } = require('./firebase/admin');
+const adminModule = require('./firebase/admin');
+const admin = adminModule.default || adminModule;
+const { db } = adminModule;
 
 async function createAdmins() {
   const admins = [
@@ -8,20 +9,25 @@ async function createAdmins() {
     { email: 'deobat72@gmail.com', name: 'Admin 3' }
   ];
 
-  for (const admin of admins) {
+  if (!admin || !db) {
+    console.error('Firebase not initialized. Check your service account configuration.');
+    process.exit(1);
+  }
+
+  for (const adminData of admins) {
     try {
       // Create user in Firebase Auth
       const userRecord = await admin.auth().createUser({
-        email: admin.email,
+        email: adminData.email,
         password: 'TempPass123!', // Temporary password
-        displayName: admin.name
+        displayName: adminData.name
       });
 
       // Create user document in Firestore
       const userDoc = {
         id: userRecord.uid,
-        name: admin.name,
-        email: admin.email,
+        name: adminData.name,
+        email: adminData.email,
         role: 'admin',
         profile: {
           age: null,
@@ -38,9 +44,9 @@ async function createAdmins() {
       };
 
       await db.collection('users').doc(userRecord.uid).set(userDoc);
-      console.log(`Admin created: ${admin.email}`);
+      console.log(`Admin created: ${adminData.email}`);
     } catch (error) {
-      console.error(`Error creating admin ${admin.email}:`, error.message);
+      console.error(`Error creating admin ${adminData.email}:`, error.message);
     }
   }
 }
