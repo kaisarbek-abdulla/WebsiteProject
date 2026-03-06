@@ -1020,14 +1020,27 @@ function renderFooter() {
 
 // Validate session on page load
 async function validateSession() {
+  console.log('validateSession called, authToken exists:', !!authToken);
+  
   if (!authToken) {
+    console.log('No token found, showing login');
     currentPage = 'login';
     render();
     return;
   }
   
+  // If we have token and currentUser data, just show dashboard
+  // Actual validation will happen when making API calls
+  if (currentUser && currentUser.id) {
+    console.log('CurrentUser exists, showing dashboard:', currentUser.id);
+    currentPage = 'dashboard';
+    render();
+    return;
+  }
+  
+  // Token exists but no currentUser - try to restore from backend
+  console.log('Token exists but no currentUser, fetching profile...');
   try {
-    // Verify user still exists in backend
     const response = await fetch(`${API_BASE}/auth/profile`, {
       method: 'GET',
       headers: {
@@ -1036,9 +1049,10 @@ async function validateSession() {
       }
     });
     
+    console.log('Profile response status:', response.status);
+    
     if (response.status === 401 || response.status === 404) {
-      // User not found or unauthorized - account was deleted
-      console.error('User account not found or invalid session:', response.status);
+      console.error('User not found (401/404), clearing session');
       authToken = null;
       currentUser = null;
       localStorage.removeItem('authToken');
@@ -1049,12 +1063,12 @@ async function validateSession() {
     }
     
     if (!response.ok) {
-      console.error('Profile check failed:', response.statusText);
       throw new Error(`API Error: ${response.statusText}`);
     }
     
-    // Session valid - update currentUser with fresh data
+    // Session valid - update currentUser
     const userData = await response.json();
+    console.log('Profile data received, setting currentUser');
     currentUser = {
       id: userData.id,
       role: userData.role,
@@ -1066,21 +1080,14 @@ async function validateSession() {
     currentPage = 'dashboard';
     render();
   } catch (err) {
-    console.error('Session validation failed:', err.message);
-    // On network/fetch error, try to use stored currentUser anyway
-    if (currentUser && currentUser.id) {
-      console.log('Using stored session data');
-      currentPage = 'dashboard';
-      render();
-    } else {
-      console.log('No valid session found, redirecting to login');
-      authToken = null;
-      currentUser = null;
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('currentUser');
-      currentPage = 'login';
-      render();
-    }
+    console.error('Session validation error:', err.message);
+    // If fetch fails, just show login
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    currentPage = 'login';
+    render();
   }
 }
 
