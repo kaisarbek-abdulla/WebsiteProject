@@ -1,5 +1,7 @@
 // Multi-page app with client-side routing
 // Use dynamic API base so mobile devices can call the same host/IP the page was served from.
+// The API_BASE helper adapts to the host and protocol of the current page, avoiding hardcoded URLs.
+
 const API_BASE = (function() {
   try {
     const host = window.location.host; // includes port
@@ -25,6 +27,7 @@ if (localStorage.getItem('currentUser')) {
 
 // Fetch with auth header
 async function apiCall(endpoint, method = 'GET', body = null) {
+  // wrap fetch with common headers, error handling, and auth
   const options = {
     method,
     headers: {
