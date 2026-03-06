@@ -13,6 +13,16 @@ const API_BASE = (function() {
 let currentUser = null;
 let authToken = localStorage.getItem('authToken') || null;
 
+// Restore currentUser from localStorage
+if (localStorage.getItem('currentUser')) {
+  try {
+    currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  } catch (e) {
+    console.error('Failed to parse stored currentUser');
+    currentUser = null;
+  }
+}
+
 // Fetch with auth header
 async function apiCall(endpoint, method = 'GET', body = null) {
   const options = {
@@ -29,7 +39,9 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     if (!res.ok) {
       if (res.status === 401) {
         authToken = null;
+        currentUser = null;
         localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
         navigate('login');
         throw new Error('Unauthorized');
       }
@@ -150,7 +162,8 @@ function attachLoginHandlers() {
       const data = await apiCall('/auth/login', 'POST', { email, password });
       authToken = data.token;
       localStorage.setItem('authToken', authToken);
-      currentUser = { id: data.userId, role: data.role };
+      currentUser = { id: data.userId, role: data.role, email: data.email, name: data.name };
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
       navigate('dashboard');
     } catch (err) {
       console.error('Login failed:', err);
@@ -216,7 +229,8 @@ function attachRegisterHandlers() {
       const data = await apiCall('/auth/register', 'POST', { name, email, password, role, language: 'en' });
       authToken = data.token;
       localStorage.setItem('authToken', authToken);
-      currentUser = { id: data.userId, role: data.role };
+      currentUser = { id: data.userId, role: data.role, email: data.email, name: data.name };
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
       navigate('dashboard');
     } catch (err) {
       console.error('Registration failed:', err);
@@ -956,8 +970,9 @@ function attachProfileFormHandlers() {
 // ===== SHARED COMPONENTS =====
 function logout() {
   authToken = null;
-  localStorage.removeItem('authToken');
   currentUser = null;
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('currentUser');
   navigate('login');
 }
 
@@ -1003,6 +1018,66 @@ function renderFooter() {
   return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant</footer>`;
 }
 
+// Validate session on page load
+async function validateSession() {
+  if (!authToken) {
+    currentPage = 'login';
+    render();
+    return;
+  }
+  
+  try {
+    // Verify user still exists in backend
+    const response = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.status === 401 || response.status === 404) {
+      // User not found or unauthorized - account was deleted
+      console.error('User account not found or invalid session');
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      alert('Your account is no longer available. Please log in again.');
+      currentPage = 'login';
+      render();
+      return;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+    
+    // Session valid - update currentUser with fresh data
+    const userData = await response.json();
+    currentUser = {
+      id: userData.id,
+      role: userData.role,
+      email: userData.email,
+      name: userData.name,
+      profile: userData.profile
+    };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    currentPage = 'dashboard';
+    render();
+  } catch (err) {
+    console.error('Session validation failed:', err);
+    // On network error, try to use stored currentUser anyway
+    if (currentUser) {
+      currentPage = 'dashboard';
+      render();
+    } else {
+      currentPage = 'login';
+      render();
+    }
+  }
+}
+
 // Start the app
 document.addEventListener('DOMContentLoaded', () => {
   // Clear invalid tokens
@@ -1011,11 +1086,6 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('authToken');
   }
   
-  // Check if user is logged in
-  if (authToken) {
-    currentPage = 'dashboard';
-  } else {
-    currentPage = 'login';
-  }
-  render();
+  // Validate and restore session
+  validateSession();
 });
