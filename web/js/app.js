@@ -358,25 +358,25 @@ function renderDoctorDashboard() {
 function renderAdminDashboard() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
-      <div style="margin-bottom:30px;">
-        <h2 style="font-size:32px; margin-bottom:8px; color:#0b0838;">👥 User Management</h2>
-        <p style="color:#99a0ac; margin-bottom:20px;">Manage system users, roles, and permissions</p>
-        <div id="users-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:16px; margin-bottom:30px;"></div>
+      <div class="admin-section">
+        <h2 class="section-title">👥 User Management</h2>
+        <p class="section-subtitle">Manage system users, roles, and permissions</p>
+        <div id="users-grid" class="users-grid"></div>
       </div>
-      
-      <div style="margin-top:40px; border-top:2px solid #e6e9ef; padding-top:30px;">
-        <h2 style="font-size:28px; margin-bottom:8px; color:#0b0838;">📋 System Complaints</h2>
-        <p style="color:#99a0ac; margin-bottom:20px;">Review and manage user complaints</p>
+
+      <div class="admin-section complaints-section">
+        <h2 class="section-title">📋 System Complaints</h2>
+        <p class="section-subtitle">Review and manage user complaints</p>
         <div id="complaints-list"></div>
       </div>
     </main>
-    
+
     <!-- User Edit Modal -->
-    <div id="user-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center;">
-      <div style="background:white; padding:30px; border-radius:14px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <h3 style="margin:0; color:#0b0838;">Edit User</h3>
-          <button onclick="closeUserModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#99a0ac;">&times;</button>
+    <div id="user-modal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Edit User</h3>
+          <button onclick="closeUserModal()" class="modal-close">&times;</button>
         </div>
         <div id="modal-content"></div>
       </div>
@@ -554,39 +554,39 @@ async function loadUsers() {
     const users = await apiCall('/auth/users/all', 'GET');
     const gridDiv = document.getElementById('users-grid');
     if (users.length === 0) {
-      gridDiv.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#99a0ac; padding:40px;">No users found.</p>';
+      gridDiv.innerHTML = '<div class="empty-state">No users found.</div>';
       return;
     }
     let html = '';
     users.forEach(u => {
-      const roleColor = u.role === 'admin' ? '#d32f2f' : u.role === 'doctor' ? '#2196f3' : '#4caf50';
+      const roleColor = u.role === 'admin' ? 'var(--error)' : u.role === 'doctor' ? 'var(--primary)' : 'var(--success)';
       const roleIcon = u.role === 'admin' ? '👨‍💼' : u.role === 'doctor' ? '👨‍⚕️' : '👤';
       html += `
-        <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(20,30,60,0.06); border-left:4px solid ${roleColor}; transition:all 0.3s ease; cursor:pointer;" onmouseover="this.style.boxShadow='0 8px 20px rgba(20,30,60,0.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(20,30,60,0.06)'">
-          <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-size:24px;">${roleIcon}</span>
-              <div>
-                <h4 style="margin:0; color:#0b0838; font-size:16px;">${u.name}</h4>
-                <p style="margin:4px 0; color:#99a0ac; font-size:12px;">${u.email}</p>
+        <div class="user-card" onclick="openEditUserModal('${u.id}', '${u.name}', '${u.email}', '${u.role}')">
+          <div class="user-header">
+            <div class="user-info">
+              <div class="user-avatar">${roleIcon}</div>
+              <div class="user-details">
+                <h4>${u.name}</h4>
+                <p>${u.email}</p>
               </div>
             </div>
-            <span style="background:${roleColor}; color:white; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase;">${u.role}</span>
+            <span class="user-role" style="background:${roleColor}">${u.role}</span>
           </div>
-          
-          <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin-bottom:12px; font-size:13px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div><span style="color:#99a0ac;">Age:</span> <strong style="color:#0b0838;">${u.profile?.age || 'N/A'}</strong></div>
-              <div><span style="color:#99a0ac;">Height:</span> <strong style="color:#0b0838;">${u.profile?.height || 'N/A'}</strong></div>
-              <div><span style="color:#99a0ac;">Weight:</span> <strong style="color:#0b0838;">${u.profile?.weight || 'N/A'}</strong></div>
-              <div><span style="color:#99a0ac;">Joined:</span> <strong style="color:#0b0838;">${new Date(u.createdAt).toLocaleDateString()}</strong></div>
+
+          <div class="user-stats">
+            <div class="user-stats-grid">
+              <div><span>Age:</span> <strong>${u.profile?.age || 'N/A'}</strong></div>
+              <div><span>Height:</span> <strong>${u.profile?.height || 'N/A'}</strong></div>
+              <div><span>Weight:</span> <strong>${u.profile?.weight || 'N/A'}</strong></div>
+              <div><span>Joined:</span> <strong>${new Date(u.createdAt).toLocaleDateString()}</strong></div>
             </div>
           </div>
-          
-          <div style="display:flex; gap:8px;">
-            <button onclick="openEditUserModal('${u.id}', '${u.name}', '${u.email}', '${u.role}')" style="flex:1; background:#2b67ff; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">✏️ Edit</button>
-            <button onclick="changeUserRole('${u.id}', '${u.role}')" style="flex:1; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">🔄 Role</button>
-            <button onclick="confirmDeleteUser('${u.id}', '${u.name}')" style="flex:1; background:#d32f2f; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; transition:background 0.2s;">🗑️ Delete</button>
+
+          <div class="user-actions">
+            <button onclick="event.stopPropagation(); openEditUserModal('${u.id}', '${u.name}', '${u.email}', '${u.role}')" class="btn-small btn-edit">✏️ Edit</button>
+            <button onclick="event.stopPropagation(); changeUserRole('${u.id}', '${u.role}')" class="btn-small btn-role">🔄 Role</button>
+            <button onclick="event.stopPropagation(); confirmDeleteUser('${u.id}', '${u.name}')" class="btn-small btn-delete">🗑️ Delete</button>
           </div>
         </div>
       `;
@@ -594,7 +594,7 @@ async function loadUsers() {
     gridDiv.innerHTML = html;
   } catch (err) {
     console.error('Load users failed:', err);
-    document.getElementById('users-grid').innerHTML = '<p style="grid-column:1/-1; color:red; text-align:center;">Failed to load users.</p>';
+    document.getElementById('users-grid').innerHTML = '<div class="error-state">Failed to load users.</div>';
   }
 }
 
@@ -602,26 +602,26 @@ function openEditUserModal(userId, name, email, role) {
   const modal = document.getElementById('user-modal');
   const content = document.getElementById('modal-content');
   content.innerHTML = `
-    <form style="display:flex; flex-direction:column; gap:12px;" onsubmit="handleUpdateUser(event, '${userId}')">
+    <form class="modal-form" onsubmit="handleUpdateUser(event, '${userId}')">
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="edit-name" value="${name}" required style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+        <input type="text" id="edit-name" value="${name}" required>
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="edit-email" value="${email}" required style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+        <input type="email" id="edit-email" value="${email}" required>
       </div>
       <div class="form-group">
         <label>Role</label>
-        <select id="edit-role" value="${role}" style="width:100%; padding:10px; border:1px solid #efeff2; border-radius:8px; font-size:14px;">
+        <select id="edit-role" value="${role}">
           <option value="patient">Patient</option>
           <option value="doctor">Doctor</option>
           <option value="admin">Admin</option>
         </select>
       </div>
-      <div style="display:flex; gap:10px; margin-top:16px;">
-        <button type="submit" style="flex:1; background:#2b67ff; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px;">Save Changes</button>
-        <button type="button" onclick="closeUserModal()" style="flex:1; background:#e6e9ef; color:#0b0838; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px;">Cancel</button>
+      <div class="modal-actions">
+        <button type="submit" class="btn primary">Save Changes</button>
+        <button type="button" onclick="closeUserModal()" class="btn secondary">Cancel</button>
       </div>
     </form>
   `;
