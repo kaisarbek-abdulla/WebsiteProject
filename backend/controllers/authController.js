@@ -53,7 +53,7 @@ exports.register = async (req, res) => {
     store.addUser(user);
   }
   const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-  res.json({ userId: user.id, token, role: user.role });
+  res.json({ userId: user.id, token, role: user.role, name: user.name, email: user.email });
 };
 
 exports.login = async (req, res) => {
@@ -74,7 +74,7 @@ exports.login = async (req, res) => {
   const { hash } = hashPassword(password, user.salt);
   if (hash !== user.passwordHash) return res.status(401).json({ error: 'Invalid credentials' });
   const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-  res.json({ token, userId: user.id, role: user.role });
+  res.json({ token, userId: user.id, role: user.role, name: user.name, email: user.email });
 };
 
 exports.getUser = async (req, res) => {

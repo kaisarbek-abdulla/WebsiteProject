@@ -1038,18 +1038,18 @@ async function validateSession() {
     
     if (response.status === 401 || response.status === 404) {
       // User not found or unauthorized - account was deleted
-      console.error('User account not found or invalid session');
+      console.error('User account not found or invalid session:', response.status);
       authToken = null;
       currentUser = null;
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
-      alert('Your account is no longer available. Please log in again.');
       currentPage = 'login';
       render();
       return;
     }
     
     if (!response.ok) {
+      console.error('Profile check failed:', response.statusText);
       throw new Error(`API Error: ${response.statusText}`);
     }
     
@@ -1066,12 +1066,18 @@ async function validateSession() {
     currentPage = 'dashboard';
     render();
   } catch (err) {
-    console.error('Session validation failed:', err);
-    // On network error, try to use stored currentUser anyway
-    if (currentUser) {
+    console.error('Session validation failed:', err.message);
+    // On network/fetch error, try to use stored currentUser anyway
+    if (currentUser && currentUser.id) {
+      console.log('Using stored session data');
       currentPage = 'dashboard';
       render();
     } else {
+      console.log('No valid session found, redirecting to login');
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
       currentPage = 'login';
       render();
     }
