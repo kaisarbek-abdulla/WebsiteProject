@@ -14,6 +14,71 @@ const API_BASE = (function() {
 
 let currentUser = null;
 let authToken = localStorage.getItem('authToken') || null;
+// language support
+let currentLang = localStorage.getItem('lang') || (navigator.language.startsWith('ru') ? 'ru' : navigator.language.startsWith('kk') ? 'kz' : 'en');
+const translations = {
+  en: {
+    welcome: 'Welcome',
+    dashboard: 'Dashboard',
+    symptoms: 'Symptoms',
+    reminders: 'Reminders',
+    devices: 'Devices',
+    vitals: 'Vitals',
+    nutrition: 'Nutrition',
+    reports: 'Reports',
+    complaints: 'Complaints',
+    profile: 'Profile',
+    logout: 'Logout',
+    analyze: 'Analyze',
+    // ... add more as needed
+  },
+  kz: {
+    welcome: 'Қош келдіңіз',
+    dashboard: 'Басқару панелі',
+    symptoms: 'Симптомдар',
+    reminders: 'Еске салғыштар',
+    devices: 'Құрылғылар',
+    vitals: 'Маңызды көрсеткіштер',
+    nutrition: 'Тамақтану',
+    reports: 'Есептер',
+    complaints: 'Шағымдар',
+    profile: 'Профиль',
+    logout: 'Шығу',
+    analyze: 'Талдау',
+  },
+  ru: {
+    welcome: 'Добро пожаловать',
+    dashboard: 'Панель',
+    symptoms: 'Симптомы',
+    reminders: 'Напоминания',
+    devices: 'Устройства',
+    vitals: 'Показатели',
+    nutrition: 'Питание',
+    reports: 'Отчёты',
+    complaints: 'Жалобы',
+    profile: 'Профиль',
+    logout: 'Выйти',
+    analyze: 'Анализировать',
+  }
+};
+function t(key){
+  return translations[currentLang] && translations[currentLang][key] ? translations[currentLang][key] : key;
+}
+function setLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  render();
+}
+
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  if(cur==='dark'){
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme','dark');
+  }
+}
+
 
 // Restore currentUser from localStorage
 if (localStorage.getItem('currentUser')) {
@@ -266,7 +331,10 @@ function renderPatientDashboard() {
             <p class="muted">Describe your symptoms</p>
             <textarea id="symptom-input" placeholder="e.g. I have a headache and sore throat..."></textarea>
             <div class="actions">
-              <button id="analyze-btn" class="btn primary">Analyze</button>
+              <button id="analyze-btn" class="btn primary">
+                <span class="btn-icon">🔍</span> ${t('analyze')}
+                <span class="spinner" style="display:none; margin-left:8px;">⏳</span>
+              </button>
             </div>
             <div id="analysis-result" style="margin-top:12px; display:none; padding:12px; background:#e8f5e9; border-radius:8px; color:#1b5e20;"></div>
           </div>
@@ -721,49 +789,130 @@ async function loadComplaints() {
 
 // ===== OTHER PAGES (STUB) =====
 function renderSymptoms() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Symptoms</h2><p>Track and manage your symptoms here.</p></div></main>${renderFooter()}`;
+  // form to log new symptom plus history list
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('symptoms')}</h2><p class="subtitle">Describe and log symptoms as they arise.</p></div>
+      <div class="card">
+        <form id="symptom-form" class="modal-form">
+          <div class="form-group">
+            <label for="symptom-text">What are you feeling?</label>
+            <textarea id="symptom-text" placeholder="e.g. headache, fatigue..." required></textarea>
+          </div>
+          <button class="btn primary" onclick="submitSymptom(event)">${t('analyze')}</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>History</h3>
+        <div id="symptom-history" class="empty-state">No symptoms logged yet.</div>
+      </div>
+    </main>${renderFooter()}`;
 }
+
 
 function attachSymptomsHandlers() {}
 
 function renderReminders() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Reminders</h2><p>Manage your health reminders.</p></div></main>${renderFooter()}`;
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('reminders')}</h2><p class="subtitle">Stay on track with scheduled alerts.</p></div>
+      <div class="card">
+        <button class="btn primary" onclick="openAddReminder()">+ Add reminder</button>
+        <div id="reminders-list" class="empty-state">No reminders yet. Click above to add one.</div>
+      </div>
+    </main>${renderFooter()}`;
 }
+
 
 function attachRemindersHandlers() {}
 
 function renderDevices() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Devices</h2><p>Connect and manage your wearable devices.</p></div></main>${renderFooter()}`;
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('devices')}</h2><p class="subtitle">Link smart watches and trackers for live data.</p></div>
+      <div class="card">
+        <button class="btn primary" onclick="connectDevice()">Connect new device</button>
+        <div id="devices-list" class="empty-state">No devices connected.</div>
+      </div>
+    </main>${renderFooter()}`;
 }
+
 
 function attachDevicesHandlers() {}
 
 function renderVitals() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Vitals</h2><p>View your vital signs.</p></div></main>${renderFooter()}`;
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('vitals')}</h2><p class="subtitle">Learn how your body is doing over time.</p></div>
+      <div class="stats-grid" id="vitals-grid">
+        <!-- placeholders for charts -->
+        <div class="stat">Heart Rate<br><div class="empty-chart">No data</div></div>
+        <div class="stat">Blood Pressure<br><div class="empty-chart">No data</div></div>
+        <div class="stat">Oxygen<br><div class="empty-chart">No data</div></div>
+        <div class="stat">Temperature<br><div class="empty-chart">No data</div></div>
+      </div>
+      <div class="card" style="margin-top:24px;">
+        <h3>Recent readings</h3>
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Date</th><th>Type</th><th>Value</th></tr></thead>
+          <tbody id="vitals-table"><tr><td colspan="3" class="empty-state">No readings available</td></tr></tbody>
+        </table>
+      </div>
+    </main>${renderFooter()}`;
 }
+
 
 function renderNutrition() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Nutrition</h2><p>Track your nutrition intake.</p></div></main>${renderFooter()}`;
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('nutrition')}</h2><p class="subtitle">Log meals and monitor calories.</p></div>
+      <div class="card">
+        <form id="nutrition-form" class="modal-form">
+          <div class="form-group">
+            <label>Food item</label>
+            <input type="text" id="food-name" placeholder="e.g. Banana" required>
+          </div>
+          <div class="form-group">
+            <label>Calories</label>
+            <input type="number" id="food-cal" placeholder="200" required>
+          </div>
+          <button class="btn primary" onclick="addFood(event)">Add</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Daily summary</h3>
+        <div id="nutrition-chart" class="empty-chart">No entries yet</div>
+      </div>
+    </main>${renderFooter()}`;
 }
 
+
 function renderReports() {
-  return `${renderHeader()}${renderNav()}<main class="container"><div class="card"><h2>Reports</h2><p>View your health reports.</p></div></main>${renderFooter()}`;
+  return `${renderHeader()}${renderNav()}<main class="container">
+      <div class="page-header"><h2>${t('reports')}</h2><p class="subtitle">Download summaries and export data.</p></div>
+      <div class="card">
+        <ul id="reports-list" style="list-style:none; padding:0;">
+          <li class="empty-state">No reports generated</li>
+        </ul>
+      </div>
+    </main>${renderFooter()}`;
 }
+
 
 function renderComplaints() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
+      <div class="page-header"><h2>${t('complaints')}</h2><p class="subtitle">Let us know what's wrong.</p></div>
       <div class="card">
-        <h2>Complaints</h2>
-        <p>Submit a complaint or view your complaints.</p>
-        <div class="form-group">
-          <label>Message</label>
-          <textarea id="complaint-message" placeholder="Describe your complaint..."></textarea>
-        </div>
-        <button id="submit-complaint-btn" class="btn primary">Submit Complaint</button>
-        <div id="complaints-list" style="margin-top:20px;"></div>
+        <form id="complaint-form" class="modal-form">
+          <div class="form-group">
+            <label>Your message</label>
+            <textarea id="complaint-text" required></textarea>
+          </div>
+          <button class="btn primary" onclick="submitComplaint(event)">Submit</button>
+        </form>
       </div>
-    </main>${renderFooter()}`;
+      <div class="card">
+        <h3>Previous submissions</h3>
+        <div id="complaints-history" class="empty-state">You haven't submitted anything yet.</div>
+      </div>
+    </main>
+`;
 }
 
 function attachComplaintsHandlers() {
@@ -970,6 +1119,32 @@ function attachProfileFormHandlers() {
   });
 }
 
+
+// placeholder handlers for new UI elements
+function submitSymptom(e){
+  e.preventDefault();
+  console.log('symptom form submitted');
+  alert('Symptom saved (demo)');
+}
+function openAddReminder(){
+  alert('Add reminder dialog (demo)');
+}
+function connectDevice(){
+  alert('Connect device flow (demo)');
+}
+function addFood(e){
+  e.preventDefault();
+  alert('Food item added (demo)');
+}
+function saveProfile(e){
+  e.preventDefault();
+  alert('Profile saved (demo)');
+}
+function submitComplaint(e){
+  e.preventDefault();
+  alert('Complaint submitted (demo)');
+}
+
 // ===== SHARED COMPONENTS =====
 function logout() {
   authToken = null;
@@ -988,33 +1163,42 @@ function renderHeader() {
           <span class="logo-icon">💙</span>
           <div class="branding">
             <div class="app-title">Healthcare Virtual Assistant</div>
-            <div class="app-sub">Welcome, ${roleLabel}</div>
+            <div class="app-sub">${t('welcome')}, ${roleLabel}</div>
           </div>
         </div>
       </div>
       <div class="topbar-right">
-        <button class="logout" onclick="navigate('profile')">Profile ⟶</button>
-        <button class="logout" onclick="logout()" style="background-color:#d32f2f; color:white; margin-left:8px; padding:8px 16px; border:none; border-radius:4px; cursor:pointer;">Logout</button>
+        <select class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en" ${currentLang==='en'?'selected':''}>English</option>
+          <option value="kz" ${currentLang==='kz'?'selected':''}>Қазақша</option>
+          <option value="ru" ${currentLang==='ru'?'selected':''}>Русский</option>
+        </select>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌓</button>
+        <button class="logout" onclick="navigate('profile')">${t('profile')} ⟶</button>
+        <button class="logout" onclick="logout()" style="background-color:#d32f2f; color:white; margin-left:8px; padding:8px 16px; border:none; border-radius:4px; cursor:pointer;">${t('logout')}</button>
       </div>
     </header>
   `;
 }
 
 function renderNav() {
-  return `
-    <nav class="main-nav" aria-label="Primary">
-      <div class="nav-scroll">
-        <button class="nav-item ${currentPage === 'dashboard' ? 'active' : ''}" onclick="navigate('dashboard')">📈 Dashboard</button>
-        <button class="nav-item ${currentPage === 'symptoms' ? 'active' : ''}" onclick="navigate('symptoms')">🩺 Symptoms</button>
-        <button class="nav-item ${currentPage === 'reminders' ? 'active' : ''}" onclick="navigate('reminders')">🔔 Reminders</button>
-        <button class="nav-item ${currentPage === 'devices' ? 'active' : ''}" onclick="navigate('devices')">⌚ Devices</button>
-        <button class="nav-item ${currentPage === 'vitals' ? 'active' : ''}" onclick="navigate('vitals')">❤️ Vitals</button>
-        <button class="nav-item ${currentPage === 'nutrition' ? 'active' : ''}" onclick="navigate('nutrition')">🍽️ Nutrition</button>
-        <button class="nav-item ${currentPage === 'reports' ? 'active' : ''}" onclick="navigate('reports')">📊 Reports</button>
-        <button class="nav-item ${currentPage === 'complaints' ? 'active' : ''}" onclick="navigate('complaints')">📝 Complaints</button>
-      </div>
-    </nav>
-  `;
+  const items = [
+    ['dashboard','📈'],
+    ['symptoms','🩺'],
+    ['reminders','🔔'],
+    ['devices','⌚'],
+    ['vitals','❤️'],
+    ['nutrition','🍽️'],
+    ['reports','📊'],
+    ['complaints','📝'],
+  ];
+  const isDesktop = window.innerWidth >= 768;
+  let html = `<nav class="${isDesktop ? 'sidebar' : 'main-nav'}" aria-label="Primary"><div ${isDesktop?'':'class="nav-scroll"'}>`;
+  items.forEach(([page, icon]) => {
+    html += `<button class="nav-item ${currentPage===page?'active':''}" onclick="navigate('${page}')"><span class="icon">${icon}</span> ${t(page)}</button>`;
+  });
+  html += `</div></nav>`;
+  return html;
 }
 
 function renderFooter() {
