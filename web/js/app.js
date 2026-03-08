@@ -205,7 +205,7 @@ function renderLogin() {
   return `
     <div class="auth-container">
       <div class="auth-card">
-        <img src="../assets/images/icon-192.png" alt="PULSE Logo" class="logo-large">
+        <img src="../../frontend/assets/images/icon-192.png" alt="PULSE Logo" class="logo-large">
         <h1>Healthcare Virtual Assistant</h1>
         <p>Sign in to your account</p>
         
@@ -257,7 +257,7 @@ function renderRegister() {
   return `
     <div class="auth-container">
       <div class="auth-card">
-        <img src="../assets/images/icon-192.png" alt="PULSE Logo" class="logo-large">
+        <img src="../../frontend/assets/images/icon-192.png" alt="PULSE Logo" class="logo-large">
         <h1>Create Your Account</h1>
         <p>Get started with Healthcare Virtual Assistant</p>
         
@@ -1426,7 +1426,7 @@ function renderHeader() {
     <header class="topbar">
       <div class="topbar-left">
         <div class="logo">
-          <img src="../assets/images/icon-192.png" alt="PULSE Logo" class="logo-icon">
+          <img src="../../frontend/assets/images/icon-192.png" alt="PULSE Logo" class="logo-icon">
           <div class="branding">
             <div class="app-title">PULSE</div>
             <div class="app-sub">AI Health Assistant</div>
