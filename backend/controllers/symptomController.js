@@ -28,6 +28,35 @@ async function analyzeWithGrok(symptomText) {
     ? 'https://api.groq.com/v1/chat/completions'
     : 'https://api.x.ai/v1/chat/completions';
 
+  // helper for fallback call to grok when groq fails
+  async function analyzeWithGrokFallback(fallbackText) {
+    if (!process.env.XAI_API_KEY) return { analysis: 'AI unavailable' };
+    try {
+      const resp = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'Fallback medical symptom analyzer, respond in free text.' },
+            { role: 'user', content: `Please analyze these symptoms: ${fallbackText}` }
+          ],
+          model: 'grok-beta',
+          stream: false,
+          temperature: 0.7
+        })
+      });
+      const j = await resp.json();
+      const cont = j.choices?.[0]?.message?.content || '';
+      return { analysis: cont };
+    } catch (e) {
+      console.error('Fallback grok call failed', e);
+      return { analysis: 'Fallback analysis unavailable' };
+    }
+  }
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -53,6 +82,13 @@ async function analyzeWithGrok(symptomText) {
     });
 
     if (!response.ok) {
+      const text = await response.text().catch(() => '<no body>');
+      console.error('AI API returned error status', response.status, text);
+      // if groq failed with authentication or other error, try fallback to grok
+      if (isGroq && process.env.XAI_API_KEY) {
+        console.warn('Falling back to grok because groq request failed');
+        return analyzeWithGrokFallback(symptomText);
+      }
       throw new Error(`AI API error: ${response.status}`);
     }
 
