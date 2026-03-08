@@ -651,7 +651,7 @@ body{
 
 /* Modal */
 .modal-overlay{
-  display:none;
+  display:none; /* hidden by default, JS will set to flex when opened */
   position:fixed;
   top:0;
   left:0;
@@ -660,7 +660,6 @@ body{
   background:rgba(0, 0, 0, 0.5);
   backdrop-filter:blur(4px);
   z-index:1000;
-  display:flex;
   justify-content:center;
   align-items:center;
   padding:20px;
@@ -926,4 +925,3 @@ html{
 
 
 
-\n#user-modal { display: none; }\n

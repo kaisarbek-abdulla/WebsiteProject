@@ -19,63 +19,80 @@ function parseText(text) {
   return [...new Set(found)];
 }
 
-// Analyze symptoms using Grok AI
+// Analyze symptoms using Grok/Groq AI.  Attempts to parse JSON output.
 async function analyzeWithGrok(symptomText) {
+  // use GROQ_API_KEY if provided, otherwise fall back to XAI_API_KEY (grok)
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY;
+  const isGroq = !!process.env.GROQ_API_KEY;
+  const endpoint = isGroq
+    ? 'https://api.groq.com/v1/chat/completions'
+    : 'https://api.x.ai/v1/chat/completions';
+
   try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         messages: [
           {
             role: 'system',
-            content: 'You are a medical symptom analyzer. Analyze the user\'s symptoms and provide possible conditions, severity level (mild/moderate/severe), and general advice. Always emphasize that this is not medical advice and they should consult a healthcare professional. Keep responses concise and structured.'
+            content: 'You are a medical symptom analyzer. Analyze the user\'s symptoms and respond in JSON with the following keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). If you cannot provide a structured response, simply return a text analysis under the "analysis" field. Always include a disclaimer reminding the user to consult a healthcare professional.'
           },
           {
             role: 'user',
             content: `Please analyze these symptoms: ${symptomText}`
           }
         ],
-        model: 'grok-beta',
+        model: isGroq ? 'groq-1.0' : 'grok-beta',
         stream: false,
         temperature: 0.7
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Grok API error: ${response.status}`);
+      throw new Error(`AI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    const content = data.choices?.[0]?.message?.content || '';
+    // try to interpret as JSON
+    try {
+      return JSON.parse(content);
+    } catch (e) {
+      // if parsing fails, put raw content into analysis field
+      return { analysis: content };
+    }
   } catch (error) {
-    console.error('Grok API call failed:', error);
-    return 'Unable to analyze symptoms at this time. Please consult a healthcare professional.';
+    console.error('AI API call failed:', error);
+    return { analysis: 'Unable to analyze symptoms at this time. Please consult a healthcare professional.' };
   }
 }
 
 exports.createEntry = async (req, res) => {
-  const { text, language } = req.body;
-  if (!text) return res.status(400).json({ error: 'text is required' });
+  // accept either text or symptoms field for backward compatibility
+  const textInput = req.body.text || req.body.symptoms;
+  const { language } = req.body;
+  if (!textInput) return res.status(400).json({ error: 'text is required' });
 
   try {
-    // Get AI analysis from Grok
-    const aiAnalysis = await analyzeWithGrok(text);
+    // Get structured AI analysis (object) from Grok/Groq
+    const aiData = await analyzeWithGrok(textInput);
 
     // Parse basic symptoms for categorization (keep simple keyword matching for now)
-    const parsedSymptoms = parseText(text);
+    const parsedSymptoms = parseText(textInput);
     const severity = parsedSymptoms.length >= 3 ? 'severe' : parsedSymptoms.length >= 2 ? 'moderate' : 'mild';
 
     const entry = {
       id: Date.now().toString(),
       userId: req.user?.id || req.body.userId || 'anonymous',
-      text,
+      text: textInput,
       parsedSymptoms,
       severity,
-      aiAnalysis,
+      symptomsCount: parsedSymptoms.length,
+      ...aiData,
       language: language || 'en',
       timestamp: new Date().toISOString()
     };

@@ -1,5 +1,5 @@
 node_modules/
-.env
+# .env intentionally removed so we can commit configuration when necessary
 .DS_Store
 *.log
 dist/

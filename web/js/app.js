@@ -443,7 +443,7 @@ function renderAdminDashboard() {
     </main>
 
     <!-- User Edit Modal -->
-    <div id="user-modal" class="modal-overlay">
+    <div id="user-modal" class="modal-overlay" style="display:none;">
       <div class="modal-content">
         <div class="modal-header">
           <h3>Edit User</h3>
@@ -483,22 +483,34 @@ function attachPatientDashboardHandlers() {
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analyzing...';
         
-        const result = await apiCall('/symptoms/analyze', 'POST', { symptoms: text });
+        const result = await apiCall('/symptoms/analyze', 'POST', { text });
         
+        // normalize fields with defaults so UI doesn't break
+        const detectedSymptoms = result.detectedSymptoms || [];
+        const symptomsCount = result.symptomsCount || detectedSymptoms.length;
+        const urgency = result.urgency || '';
+        const severityVal = result.severity || 'Low';
+        const conditions = result.conditions || [];
+        const analysisText = result.analysis || result.aiAnalysis || '';
+        const treatments = result.treatments || [];
+        const diagnosticTests = result.diagnosticTests || [];
+        const healthAdvice = result.healthAdvice || [];
+        const disclaimer = result.disclaimer || '';
+
         resultDiv.style.display = 'block';
         let html = `<strong style="font-size:1.2em; color:#1a1a1a;">📋 Comprehensive Analysis Result</strong><br><hr style="margin:10px 0; border:none; border-top:2px solid #e0e0e0;"><br>`;
         
         // Symptoms detected summary
-        if (result.detectedSymptoms && result.detectedSymptoms.length > 0) {
-          html += `<div style="margin-bottom:12px; padding:10px; background-color:#e8f5e9; border-left:4px solid #4caf50; border-radius:4px;"><strong>🔍 Symptoms Detected:</strong> <span style="color:#2e7d32; font-weight:bold;">${result.symptomsCount}</span> - ${result.detectedSymptoms.map(s => '<strong>' + s.charAt(0).toUpperCase() + s.slice(1) + '</strong>').join(', ')}</div>`;
+        if (detectedSymptoms.length > 0) {
+          html += `<div style="margin-bottom:12px; padding:10px; background-color:#e8f5e9; border-left:4px solid #4caf50; border-radius:4px;"><strong>🔍 Symptoms Detected:</strong> <span style="color:#2e7d32; font-weight:bold;">${symptomsCount}</span> - ${detectedSymptoms.map(s => '<strong>' + s.charAt(0).toUpperCase() + s.slice(1) + '</strong>').join(', ')}</div>`;
         }
         
         // Urgency alert with enhanced styling
-        if (result.urgency === 'URGENT') {
+        if (urgency === 'URGENT') {
           html += `<div style="color:#fff; background-color:#d32f2f; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #b71c1c;">⚠️ URGENT ALERT: Call 911 immediately - This requires emergency medical attention!</div>`;
-        } else if (result.urgency.includes('ER') || result.urgency.includes('Emergency')) {
+        } else if (urgency.includes('ER') || urgency.includes('Emergency')) {
           html += `<div style="color:#fff; background-color:#f57c00; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #e65100;">🚨 Emergency Alert: ${result.urgency} - Seek emergency care immediately!</div>`;
-        } else if (result.urgency.includes('Consult') || result.urgency.includes('See')) {
+        } else if (urgency.includes('Consult') || urgency.includes('See')) {
           html += `<div style="color:#d32f2f; background-color:#ffebee; padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid #d32f2f;"><strong>⏱️ Recommended Action:</strong> ${result.urgency}</div>`;
         }
         
@@ -509,18 +521,18 @@ function attachPatientDashboardHandlers() {
           'Low-Medium': { bg: '#fff9c4', text: '#f9a825' },
           'Low': { bg: '#e8f5e9', text: '#388e3c' }
         };
-        const sColor = severityColors[result.severity] || severityColors['Low'];
-        html += `<div style="margin-bottom:12px; padding:10px; background-color:${sColor.bg}; border-radius:4px; border-left:4px solid ${sColor.text};"><strong>📊 Severity Level:</strong> <span style="color:${sColor.text}; font-weight:bold; font-size:1.05em;">${result.severity}</span></div>`;
+        const sColor = severityColors[severityVal] || severityColors['Low'];
+        html += `<div style="margin-bottom:12px; padding:10px; background-color:${sColor.bg}; border-radius:4px; border-left:4px solid ${sColor.text};"><strong>📊 Severity Level:</strong> <span style="color:${sColor.text}; font-weight:bold; font-size:1.05em;">${severityVal}</span></div>`;
         
         // Possible conditions
-        html += `<div style="margin-bottom:12px;"><strong>🏥 Possible Conditions (${result.conditions.length}):</strong><div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">`;
-        result.conditions.forEach(cond => {
+        html += `<div style="margin-bottom:12px;"><strong>🏥 Possible Conditions (${conditions.length}):</strong><div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">`;
+        conditions.forEach(cond => {
           html += `<span style="background-color:#e3f2fd; color:#1565c0; padding:6px 12px; border-radius:20px; font-size:0.9em;">${cond}</span>`;
         });
         html += `</div></div>`;
         
         // Detailed Analysis
-        const analysisLines = result.analysis.split('\n').filter(l => l.trim());
+        const analysisLines = analysisText.split('\n').filter(l => l.trim());
         html += `<div style="margin-bottom:12px; padding:12px; background-color:#f5f5f5; border-left:5px solid #2b67ff; border-radius:4px;"><strong style="font-size:1.05em;">📝 Detailed Analysis:</strong><br><div style="margin-top:8px; line-height:1.6; color:#333;">`;
         analysisLines.forEach((line, idx) => {
           if (line.includes('⚠️') || line.includes('Multiple') || line.includes('ALERT')) {
