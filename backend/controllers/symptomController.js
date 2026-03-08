@@ -26,7 +26,7 @@ async function analyzeWithGrok(symptomText) {
   const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY;
   const isGroq = !!process.env.GROQ_API_KEY;
   const endpoint = isGroq
-    ? 'https://api.groq.com/v1/chat/completions'
+    ? 'https://api.groq.com/openai/v1/chat/completions'
     : 'https://api.x.ai/v1/chat/completions';
 
   // helper for fallback call to grok when groq fails
@@ -76,7 +76,7 @@ async function analyzeWithGrok(symptomText) {
             content: `Please analyze these symptoms: ${symptomText}`
           }
         ],
-        model: isGroq ? 'groq-1.0' : 'grok-beta',
+        model: isGroq ? 'llama3-8b-8192' : 'grok-beta',
         stream: false,
         temperature: 0.7
       })
