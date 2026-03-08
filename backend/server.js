@@ -11,6 +11,8 @@ app.use(cors());
 app.use(express.json());
 // Serve the web frontend from the `web/` folder (resolved relative to this file)
 app.use(express.static(path.join(__dirname, '..', 'web')));
+// Also serve frontend assets (PWA and logos)
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // Explicit route for the dashboard HTML
 app.get('/html/index.html', (req, res) => {
