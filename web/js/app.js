@@ -809,7 +809,9 @@ function renderSymptoms() {
 }
 
 
-function attachSymptomsHandlers() {}
+function attachSymptomsHandlers() {
+  loadSymptomHistory();
+}
 
 function renderReminders() {
   return `${renderHeader()}${renderNav()}<main class="container">
@@ -1110,8 +1112,33 @@ function attachProfileFormHandlers() {
 // placeholder handlers for new UI elements
 function submitSymptom(e){
   e.preventDefault();
-  console.log('symptom form submitted');
-  alert('Symptom saved (demo)');
+  const text = document.getElementById('symptom-text').value.trim();
+  if (!text) {
+    alert('Please describe your symptoms');
+    return;
+  }
+
+  // Show loading state
+  const button = e.target;
+  const originalText = button.textContent;
+  button.textContent = 'Analyzing...';
+  button.disabled = true;
+
+  apiCall('/symptoms', 'POST', { text })
+    .then(result => {
+      // Display the AI analysis
+      showSymptomAnalysis(result);
+      document.getElementById('symptom-text').value = '';
+      loadSymptomHistory();
+    })
+    .catch(err => {
+      console.error('Symptom analysis failed:', err);
+      alert('Failed to analyze symptoms. Please try again.');
+    })
+    .finally(() => {
+      button.textContent = originalText;
+      button.disabled = false;
+    });
 }
 function openAddReminder(){
   alert('Add reminder dialog (demo)');
@@ -1180,9 +1207,44 @@ function connectDevice(){
   });
 }
 
-function closeModal() {
-  const modal = document.querySelector('.modal-overlay');
-  if (modal) modal.remove();
+function showSymptomAnalysis(result) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal analysis-modal">
+      <h3>Symptom Analysis</h3>
+      <div class="analysis-content">
+        <div class="analysis-section">
+          <h4>Your Symptoms</h4>
+          <p class="symptom-text">"${result.text}"</p>
+        </div>
+        <div class="analysis-section">
+          <h4>AI Analysis</h4>
+          <div class="ai-response">${result.aiAnalysis.replace(/\n/g, '<br>')}</div>
+        </div>
+        <div class="analysis-section">
+          <h4>Detected Symptoms</h4>
+          <div class="symptoms-tags">
+            ${result.parsedSymptoms.length > 0 
+              ? result.parsedSymptoms.map(s => `<span class="symptom-tag">${s}</span>`).join('')
+              : 'No specific symptoms detected'
+            }
+          </div>
+        </div>
+        <div class="analysis-section">
+          <h4>Severity Level</h4>
+          <span class="severity-badge severity-${result.severity}">${result.severity}</span>
+        </div>
+        <div class="analysis-disclaimer">
+          <strong>⚠️ Important:</strong> This analysis is for informational purposes only and is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 async function loadDevices() {
@@ -1228,6 +1290,46 @@ async function disconnectDevice(deviceId) {
     console.error('Disconnect device failed:', err);
     alert('Failed to disconnect device. Please try again.');
   }
+}
+
+async function loadSymptomHistory() {
+  try {
+    const symptoms = await apiCall('/symptoms', 'GET');
+    const historyDiv = document.getElementById('symptom-history');
+    
+    if (!symptoms || symptoms.length === 0) {
+      historyDiv.innerHTML = 'No symptoms logged yet.';
+      return;
+    }
+    
+    let html = '<div class="symptoms-history">';
+    symptoms.forEach(symptom => {
+      const date = new Date(symptom.timestamp).toLocaleString();
+      const severityClass = `severity-${symptom.severity}`;
+      html += `
+        <div class="symptom-entry">
+          <div class="symptom-header">
+            <span class="symptom-date">${date}</span>
+            <span class="severity-badge ${severityClass}">${symptom.severity}</span>
+          </div>
+          <div class="symptom-text">"${symptom.text}"</div>
+          <div class="symptom-analysis-preview">
+            ${symptom.aiAnalysis ? symptom.aiAnalysis.substring(0, 100) + '...' : 'Analysis not available'}
+          </div>
+          <button class="btn small" onclick="viewFullAnalysis(${JSON.stringify(symptom).replace(/"/g, '&quot;')})">View Full Analysis</button>
+        </div>
+      `;
+    });
+    html += '</div>';
+    historyDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load symptoms failed:', err);
+    document.getElementById('symptom-history').innerHTML = 'Failed to load symptom history.';
+  }
+}
+
+function viewFullAnalysis(symptom) {
+  showSymptomAnalysis(symptom);
 }
 function addFood(e){
   e.preventDefault();
