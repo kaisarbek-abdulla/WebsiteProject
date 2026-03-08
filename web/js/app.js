@@ -12,6 +12,19 @@ const API_BASE = (function() {
   }
 })();
 
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('../../frontend/sw.js')
+      .then((registration) => {
+        console.log('SW registered:', registration);
+      })
+      .catch((error) => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
+
 let currentUser = null;
 let authToken = localStorage.getItem('authToken') || null;
 // language support

@@ -899,6 +899,47 @@ html{
     font-style: italic;
 }
 
+/* Mobile responsiveness for PWA */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+    margin: 0 auto;
+  }
+  .topbar {
+    padding: 10px 15px;
+  }
+  .nav-scroll {
+    padding: 8px;
+    gap: 4px;
+  }
+  .nav-item {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .card {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  .btn {
+    padding: 12px 20px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  .symptom-card textarea {
+    min-height: 80px;
+    font-size: 16px;
+  }
+  .modal-content {
+    width: 95%;
+    max-width: none;
+  }
+}
+
+/* Touch-friendly buttons and links */
+.btn, .nav-item {
+  min-height: 44px; /* Apple's recommended touch target */
+  min-width: 44px;
+}
+
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
     animation-duration:0.01ms !important;
