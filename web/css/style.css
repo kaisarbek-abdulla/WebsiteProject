@@ -61,9 +61,12 @@ body{
   background:linear-gradient(90deg, var(--primary), var(--accent));
 }
 .logo-large{
-  font-size:56px;
+  width:80px;
+  height:80px;
   margin-bottom:24px;
   opacity:0.8;
+  border-radius:12px;
+  box-shadow:var(--shadow);
 }
 .auth-card h1{
   font-size:28px;
@@ -145,15 +148,9 @@ body{
   align-items:center;
 }
 .logo-icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
   width:48px;
   height:48px;
-  background:linear-gradient(135deg, var(--primary), var(--accent));
-  color:white;
   border-radius:12px;
-  font-size:20px;
   box-shadow:var(--shadow);
 }
 .branding .app-title{
@@ -743,7 +740,7 @@ body{
   .metric{padding:14px}
   .metric-icon{font-size:20px}
   .auth-card h1{font-size:24px}
-  .logo-large{font-size:48px}
+  .logo-large{width:64px; height:64px}
   .branding .app-title{font-size:18px}
 }
 
