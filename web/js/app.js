@@ -1428,8 +1428,8 @@ function renderHeader() {
         <div class="logo">
           <span class="logo-icon">💙</span>
           <div class="branding">
-            <div class="app-title">Healthcare Virtual Assistant</div>
-            <div class="app-sub">${t('welcome')}, ${roleLabel}</div>
+            <div class="app-title">PULSE</div>
+            <div class="app-sub">AI Health Assistant</div>
           </div>
         </div>
       </div>

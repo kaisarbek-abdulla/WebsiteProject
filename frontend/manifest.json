@@ -1,7 +1,7 @@
 {
-  "name": "Healthcare Virtual Assistant",
-  "short_name": "HealthVA",
-  "description": "Manage your health symptoms, reminders, and more",
+  "name": "PULSE",
+  "short_name": "PULSE",
+  "description": "Manage your health symptoms, reminders, and more with AI-powered insights",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
