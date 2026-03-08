@@ -34,11 +34,13 @@ const authRouter = require('./routes/auth');
 const symptomsRouter = require('./routes/symptoms');
 const remindersRouter = require('./routes/reminders');
 const complaintsRouter = require('./routes/complaints');
+const devicesRouter = require('./routes/devices');
 
 app.use('/api/auth', authRouter);
 app.use('/api/symptoms', symptomsRouter);
 app.use('/api/reminders', remindersRouter);
 app.use('/api/complaints', complaintsRouter);
+app.use('/api/devices', devicesRouter);
 
 // Start background workers
 try {

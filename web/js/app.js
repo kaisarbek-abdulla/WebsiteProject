@@ -835,7 +835,9 @@ function renderDevices() {
 }
 
 
-function attachDevicesHandlers() {}
+function attachDevicesHandlers() {
+  loadDevices();
+}
 
 function renderVitals() {
   return `${renderHeader()}${renderNav()}<main class="container">
@@ -916,22 +918,7 @@ function renderComplaints() {
 }
 
 function attachComplaintsHandlers() {
-  document.getElementById('submit-complaint-btn').addEventListener('click', async () => {
-    const message = document.getElementById('complaint-message').value.trim();
-    if (!message) {
-      alert('Please enter a message');
-      return;
-    }
-    try {
-      await apiCall('/complaints', 'POST', { message });
-      alert('Complaint submitted successfully');
-      document.getElementById('complaint-message').value = '';
-      loadComplaints();
-    } catch (err) {
-      console.error('Submit complaint failed:', err);
-    }
-  });
-  loadComplaints();
+  loadComplaintsHistory();
 }
 
 async function loadComplaints() {
@@ -1130,7 +1117,117 @@ function openAddReminder(){
   alert('Add reminder dialog (demo)');
 }
 function connectDevice(){
-  alert('Connect device flow (demo)');
+  // Show device selection modal
+  const deviceTypes = [
+    { type: 'fitbit', name: 'Fitbit' },
+    { type: 'apple-watch', name: 'Apple Watch' },
+    { type: 'garmin', name: 'Garmin' },
+    { type: 'samsung-health', name: 'Samsung Health' },
+    { type: 'google-fit', name: 'Google Fit' },
+    { type: 'other', name: 'Other Wearable' }
+  ];
+  
+  let options = '<option value="">Select device type</option>';
+  deviceTypes.forEach(device => {
+    options += `<option value="${device.type}">${device.name}</option>`;
+  });
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal">
+      <h3>Connect New Device</h3>
+      <form id="device-connect-form">
+        <div class="form-group">
+          <label>Device Type</label>
+          <select id="device-type" required>
+            ${options}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Device Name</label>
+          <input type="text" id="device-name" placeholder="e.g. My Fitbit Charge 5" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn primary">Connect</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  document.getElementById('device-connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const deviceType = document.getElementById('device-type').value;
+    const deviceName = document.getElementById('device-name').value.trim();
+    
+    if (!deviceType || !deviceName) {
+      alert('Please select device type and enter device name');
+      return;
+    }
+    
+    try {
+      await apiCall('/devices/connect', 'POST', { deviceType, deviceName });
+      alert('Device connected successfully!');
+      closeModal();
+      loadDevices();
+    } catch (err) {
+      console.error('Connect device failed:', err);
+      alert('Failed to connect device. Please try again.');
+    }
+  });
+}
+
+function closeModal() {
+  const modal = document.querySelector('.modal-overlay');
+  if (modal) modal.remove();
+}
+
+async function loadDevices() {
+  try {
+    const devices = await apiCall('/devices', 'GET');
+    const listDiv = document.getElementById('devices-list');
+    
+    if (!devices || devices.length === 0) {
+      listDiv.innerHTML = 'No devices connected.';
+      return;
+    }
+    
+    let html = '<ul class="devices-list">';
+    devices.forEach(device => {
+      const connectedDate = new Date(device.connectedAt).toLocaleDateString();
+      const statusClass = device.status === 'connected' ? 'status-connected' : 'status-disconnected';
+      html += `<li class="device-item">
+        <div class="device-info">
+          <div class="device-name">${device.deviceName}</div>
+          <div class="device-type">${device.deviceType}</div>
+          <div class="device-date">Connected: ${connectedDate}</div>
+        </div>
+        <div class="device-status ${statusClass}">${device.status}</div>
+        ${device.status === 'connected' ? `<button class="btn small danger" onclick="disconnectDevice('${device.id}')">Disconnect</button>` : ''}
+      </li>`;
+    });
+    html += '</ul>';
+    listDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load devices failed:', err);
+    document.getElementById('devices-list').innerHTML = 'Failed to load devices.';
+  }
+}
+
+async function disconnectDevice(deviceId) {
+  if (!confirm('Are you sure you want to disconnect this device?')) return;
+  
+  try {
+    await apiCall(`/devices/${deviceId}`, 'DELETE');
+    alert('Device disconnected successfully!');
+    loadDevices();
+  } catch (err) {
+    console.error('Disconnect device failed:', err);
+    alert('Failed to disconnect device. Please try again.');
+  }
 }
 function addFood(e){
   e.preventDefault();
@@ -1142,7 +1239,49 @@ function saveProfile(e){
 }
 function submitComplaint(e){
   e.preventDefault();
-  alert('Complaint submitted (demo)');
+  const message = document.getElementById('complaint-text').value.trim();
+  if (!message) {
+    alert('Please enter a message');
+    return;
+  }
+  
+  apiCall('/complaints', 'POST', { message })
+    .then(() => {
+      alert('Complaint submitted successfully');
+      document.getElementById('complaint-text').value = '';
+      loadComplaintsHistory();
+    })
+    .catch(err => {
+      console.error('Submit complaint failed:', err);
+      alert('Failed to submit complaint. Please try again.');
+    });
+}
+
+async function loadComplaintsHistory() {
+  try {
+    const complaints = await apiCall('/complaints', 'GET');
+    const historyDiv = document.getElementById('complaints-history');
+    if (!complaints || complaints.length === 0) {
+      historyDiv.innerHTML = 'You haven\'t submitted anything yet.';
+      return;
+    }
+    
+    let html = '<ul class="complaints-list">';
+    complaints.forEach(c => {
+      const date = new Date(c.createdAt).toLocaleString();
+      const statusClass = c.status === 'resolved' ? 'status-resolved' : c.status === 'pending' ? 'status-pending' : 'status-in-progress';
+      html += `<li class="complaint-item">
+        <div class="complaint-date">${date}</div>
+        <div class="complaint-message">${c.message}</div>
+        <div class="complaint-status ${statusClass}">${c.status}</div>
+      </li>`;
+    });
+    html += '</ul>';
+    historyDiv.innerHTML = html;
+  } catch (err) {
+    console.error('Load complaints failed:', err);
+    document.getElementById('complaints-history').innerHTML = 'Failed to load complaints.';
+  }
 }
 
 // ===== SHARED COMPONENTS =====
