@@ -280,7 +280,8 @@ const translations = {
     deviceNameExample: "например: Мой Fitbit Charge 5",
     cancel: "Отмена",
     connect: "Подключить",
-    selectDeviceTypeAndName: "Пожалуйста, выберите тип устройства и введите название",
+    selectDeviceTypeAndName:
+      "Пожалуйста, выберите тип устройства и введите название",
     deviceConnected: "Устройство успешно подключено!",
     deviceConnectFailed: "Не удалось подключить устройство. Попробуйте снова.",
     nutritionSubtitle: "Записывайте питание и контролируйте калории.",
