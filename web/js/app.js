@@ -72,9 +72,13 @@ const translations = {
     manageReminders: "Manage your health reminders",
     manageDevices: "Manage wearable devices",
     noReminders: "No reminders set",
+    reminderMessage: "Reminder message",
+    reminderPlaceholder: "e.g. Take medication at 9:00",
     noDevices: "No devices connected",
     noData: "No data",
     vitalsSubtitle: "Learn how your body is doing over time.",
+    refreshVitals: "Refresh vitals",
+    refreshingVitals: "Refreshing vitals...",
     recentReadings: "Recent readings",
     date: "Date",
     type: "Type",
@@ -115,7 +119,9 @@ const translations = {
     calories: "Calories",
     addFood: "Add",
     dailySummary: "Daily summary",
+    totalCalories: "Total calories",
     noEntriesYet: "No entries yet",
+    exportReports: "Export reports",
     complaintSubtitle: "Let us know what's wrong.",
     yourMessage: "Your message",
     submit: "Submit",
@@ -159,9 +165,13 @@ const translations = {
     manageReminders: "Денсаулық еске салғыштарын басқарыңыз",
     manageDevices: "Құрылғыларды басқарыңыз",
     noReminders: "Еске салғыштар жоқ",
+    reminderMessage: "Еске салғыш мәтіні",
+    reminderPlaceholder: "мысалы: 9:00-де дәрі қабылдау",
     noDevices: "Құрылғылар қосылмаған",
     noData: "Деректер жоқ",
     vitalsSubtitle: "Денеңіздің жағдайын уақыт өте келе қадағалаңыз.",
+    refreshVitals: "Көрсеткіштерді жаңарту",
+    refreshingVitals: "Көрсеткіштер жаңартылып жатыр...",
     recentReadings: "Жуықтағы көрсеткіштер",
     date: "Күн",
     type: "Тип",
@@ -202,7 +212,9 @@ const translations = {
     calories: "Калория",
     addFood: "Қосу",
     dailySummary: "Күндік қорытынды",
+    totalCalories: "Жалпы калория",
     noEntriesYet: "Элементтер жоқ",
+    exportReports: "Есепті экспорттау",
     complaintSubtitle: "Не дұрыс емес екенін айтыңыз.",
     yourMessage: "Хабарламаңыз",
     submit: "Жіберу",
@@ -246,9 +258,13 @@ const translations = {
     manageReminders: "Управляйте напоминаниями",
     manageDevices: "Управляйте устройствами",
     noReminders: "Нет напоминаний",
+    reminderMessage: "Текст напоминания",
+    reminderPlaceholder: "например: принять лекарство в 9:00",
     noDevices: "Устройства не подключены",
     noData: "Нет данных",
     vitalsSubtitle: "Узнайте, как работает ваш организм с течением времени.",
+    refreshVitals: "Обновить показатели",
+    refreshingVitals: "Обновление показателей...",
     recentReadings: "Последние показания",
     date: "Дата",
     type: "Тип",
@@ -290,7 +306,9 @@ const translations = {
     calories: "Калории",
     addFood: "Добавить",
     dailySummary: "Ежедневный отчет",
+    totalCalories: "Всего калорий",
     noEntriesYet: "Нет записей",
+    exportReports: "Экспорт отчетов",
     complaintSubtitle: "Расскажите нам, что не так.",
     yourMessage: "Ваше сообщение",
     submit: "Отправить",
@@ -444,12 +462,14 @@ function render() {
       break;
     case "vitals":
       root.innerHTML = renderVitals();
+      attachVitalsHandlers();
       break;
     case "nutrition":
       root.innerHTML = renderNutrition();
       break;
     case "reports":
       root.innerHTML = renderReports();
+      attachReportsHandlers();
       break;
     case "profile":
       root.innerHTML = renderProfile();
@@ -1180,16 +1200,46 @@ function attachSymptomsHandlers() {
 }
 
 function renderReminders() {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const listHtml =
+    reminders.length === 0
+      ? `<div class="empty-state">${t("noRemindersYet")}</div>`
+      : `<ul class="reminders-list">${reminders
+          .map(
+            (r) => `<li class="reminder-item"><strong>${new Date(r.createdAt).toLocaleString()}:</strong> ${r.message}</li>`,
+          )
+          .join("")}</ul>`;
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("reminders")}</h2><p class="subtitle">${t("reminderSubtitle")}</p></div>
       <div class="card">
-        <button class="btn primary" onclick="openAddReminder()">${t("addReminder")}</button>
-        <div id="reminders-list" class="empty-state">${t("noRemindersYet")}</div>
+        <div class="form-group">
+          <label>${t("reminderMessage")}</label>
+          <input id="new-reminder-input" type="text" placeholder="${t("reminderPlaceholder")}"/>
+        </div>
+        <button id="add-reminder-btn" class="btn primary">${t("addReminder")}</button>
+        <div id="reminders-list">${listHtml}</div>
       </div>
     </main>${renderFooter()}`;
 }
 
-function attachRemindersHandlers() {}
+function attachRemindersHandlers() {
+  const addBtn = document.getElementById("add-reminder-btn");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const textEl = document.getElementById("new-reminder-input");
+      const text = textEl?.value.trim();
+      if (!text) {
+        alert(t("reminderRequired"));
+        return;
+      }
+      const existing = JSON.parse(localStorage.getItem("reminders") || "[]");
+      existing.push({ id: Date.now(), message: text, createdAt: new Date().toISOString() });
+      localStorage.setItem("reminders", JSON.stringify(existing));
+      textEl.value = "";
+      render();
+    });
+  }
+}
 
 function renderDevices() {
   return `${renderHeader()}${renderNav()}<main class="container">
@@ -1208,8 +1258,10 @@ function attachDevicesHandlers() {
 function renderVitals() {
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("vitals")}</h2><p class="subtitle">${t("vitalsSubtitle")}</p></div>
+      <div class="card">
+        <button id="refresh-vitals" class="btn primary">${t("refreshVitals")}</button>
+      </div>
       <div class="stats-grid" id="vitals-grid">
-        <!-- placeholders for charts -->
         <div class="stat">${t("heartRate")}<br><div class="empty-chart">${t("noData")}</div></div>
         <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">${t("noData")}</div></div>
         <div class="stat">${t("oxygen")}<br><div class="empty-chart">${t("noData")}</div></div>
@@ -1225,7 +1277,26 @@ function renderVitals() {
     </main>${renderFooter()}`;
 }
 
+function attachVitalsHandlers() {
+  const refreshBtn = document.getElementById("refresh-vitals");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      alert(t("refreshingVitals"));
+      render();
+    });
+  }
+}
+
 function renderNutrition() {
+  const items = JSON.parse(localStorage.getItem("nutritionEntries") || "[]");
+  const total = items.reduce((sum, item) => sum + (item.cal || 0), 0);
+  const listHtml =
+    items.length === 0
+      ? `<div class="empty-state">${t("noEntriesYet")}</div>`
+      : `<ul style="list-style:none; padding:0;">${items
+          .map((item) => `<li>${item.food} — ${item.cal} kcal</li>`)
+          .join("")}</ul>`;
+
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("nutrition")}</h2><p class="subtitle">${t("nutritionSubtitle")}</p></div>
       <div class="card">
@@ -1238,25 +1309,52 @@ function renderNutrition() {
             <label>${t("calories")}</label>
             <input type="number" id="food-cal" placeholder="200" required>
           </div>
-          <button class="btn primary" onclick="addFood(event)">${t("addFood")}</button>
+          <button class="btn primary" id="add-food-btn">${t("addFood")}</button>
         </form>
       </div>
       <div class="card">
         <h3>${t("dailySummary")}</h3>
-        <div id="nutrition-chart" class="empty-chart">${t("noEntriesYet")}</div>
+        <div>${t("totalCalories")}: <strong>${total} kcal</strong></div>
+        <div id="nutrition-list">${listHtml}</div>
       </div>
     </main>${renderFooter()}`;
 }
 
 function renderReports() {
+  const reports = JSON.parse(localStorage.getItem("userReports") || "[]");
+  const reportList =
+    reports.length === 0
+      ? `<li class="empty-state">${t("noReportsGenerated")}</li>`
+      : reports
+          .map((r) => `<li>${new Date(r.createdAt).toLocaleString()}: ${r.title}</li>`)
+          .join("");
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("reports")}</h2><p class="subtitle">${t("reportsSubtitle")}</p></div>
       <div class="card">
-        <ul id="reports-list" style="list-style:none; padding:0;">
-          <li class="empty-state">${t("noReportsGenerated")}</li>
-        </ul>
+        <button id="export-report-btn" class="btn primary">${t("exportReports")}</button>
+        <ul id="reports-list" style="list-style:none; padding:0; margin-top:12px;">${reportList}</ul>
       </div>
     </main>${renderFooter()}`;
+}
+
+function attachReportsHandlers() {
+  const exportBtn = document.getElementById("export-report-btn");
+  if (!exportBtn) return;
+  exportBtn.addEventListener("click", () => {
+    const reports = JSON.parse(localStorage.getItem("userReports") || "[]");
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      user: currentUser?.email || "guest",
+      reports,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reports-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
 function renderComplaints() {
@@ -1758,7 +1856,16 @@ function viewFullAnalysis(symptom) {
 }
 function addFood(e) {
   e.preventDefault();
-  alert(t("foodAddedDemo"));
+  const food = document.getElementById("food-name").value.trim();
+  const cal = Number(document.getElementById("food-cal").value);
+  if (!food || !cal) {
+    alert(t("foodInputError"));
+    return;
+  }
+  const entries = JSON.parse(localStorage.getItem("nutritionEntries") || "[]");
+  entries.push({ food, cal, createdAt: new Date().toISOString() });
+  localStorage.setItem("nutritionEntries", JSON.stringify(entries));
+  navigate("nutrition");
 }
 function saveProfile(e) {
   e.preventDefault();

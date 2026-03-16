@@ -130,6 +130,18 @@ body.dark-mode {
   background: #2b3050;
   border-color: #5f7ef2;
 }
+input, textarea, select, button {
+  color: #111827;
+  background-color: #fff;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] button {
+  color: #f8f9ff;
+  background-color: #1f2138;
+  border-color: #3f476f;
+}
 body.auth-page {
   margin: 0 !important;
   width: 100% !important;
