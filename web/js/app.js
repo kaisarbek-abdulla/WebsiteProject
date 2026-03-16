@@ -127,6 +127,14 @@ const translations = {
     submit: "Submit",
     previousSubmissions: "Previous submissions",
     noSubmissionsYet: "You haven't submitted anything yet.",
+    reminderRequired: "Please enter a reminder message.",
+    connectedLabel: "Connected",
+    connectDate: "Connected",
+    disconnect: "Disconnect",
+    confirmDisconnect: "Are you sure you want to disconnect this device?",
+    deviceDisconnected: "Device disconnected successfully!",
+    deviceDisconnectFailed: "Failed to disconnect device. Please try again.",
+    failedToLoadDevices: "Failed to load devices.",
     viewVitals: "View vitals",
     addReminderDialog: "Add reminder dialog (demo)",
     foodAddedDemo: "Food item added (demo)",
@@ -221,6 +229,14 @@ const translations = {
     submit: "Жіберу",
     previousSubmissions: "Алдыңғы жіберілгендер",
     noSubmissionsYet: "Сіз әлі ештеңе жібермедіңіз.",
+    reminderRequired: "Еске салғыш мәтінін енгізіңіз.",
+    connectedLabel: "Қосылған",
+    connectDate: "Қосылған",    
+    disconnect: "Өшіру",
+    confirmDisconnect: "Бұл құрылғыны ажыратқыңыз келетініне сенімдісіз бе?",
+    deviceDisconnected: "Құрылғы сәтті ажыратылды!",
+    deviceDisconnectFailed: "Құрылғыны ажырату сәтсіз өтті. Қайта көріңіз.",
+    failedToLoadDevices: "Құрылғыларды жүктеу сәтсіз аяқталды.",
     viewVitals: "Көрсеткіштерді көру",
     addReminderDialog: "Еске салғыш диалогы (демо)",
     foodAddedDemo: "Тағам элементі қосылды (демо)",
@@ -316,6 +332,14 @@ const translations = {
     submit: "Отправить",
     previousSubmissions: "Предыдущие отправки",
     noSubmissionsYet: "Вы ещё ничего не отправили.",
+    reminderRequired: "Пожалуйста, введите текст напоминания.",
+    connectedLabel: "Подключено",
+    connectDate: "Подключено",
+    disconnect: "Отключить",
+    confirmDisconnect: "Вы уверены, что хотите отключить это устройство?",
+    deviceDisconnected: "Устройство успешно отключено!",
+    deviceDisconnectFailed: "Не удалось отключить устройство. Пожалуйста, попробуйте снова.",
+    failedToLoadDevices: "Не удалось загрузить устройства.",
     viewVitals: "Просмотреть показатели",
     addReminderDialog: "Диалог добавления напоминания (демо)",
     foodAddedDemo: "Блюдо добавлено (демо)",
@@ -664,6 +688,10 @@ function renderDashboard() {
 }
 
 function renderPatientDashboard() {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminderCount = reminders.length;
+  const vitalsCount = JSON.parse(localStorage.getItem("userVitals") || "[]").length;
+  const devicesCount = JSON.parse(localStorage.getItem("localDevices") || "[]").length;
   return `
     ${renderHeader()}
     ${renderNav()}
@@ -688,22 +716,22 @@ function renderPatientDashboard() {
           <div class="card stats-grid">
             <div class="stat">
               <div class="stat-title">${t("symptomReports")}</div>
-              <div class="stat-value">0</div>
+              <div class="stat-value">${Math.max(0, vitalsCount)}</div>
               <div class="stat-sub">${t("symptomReports")}</div>
             </div>
             <div class="stat">
               <div class="stat-title">${t("activeReminders")}</div>
-              <div class="stat-value">0</div>
+              <div class="stat-value">${reminderCount}</div>
               <div class="stat-sub">${t("manageReminders")}</div>
             </div>
             <div class="stat">
               <div class="stat-title">${t("connectedDevicesTitle")}</div>
-              <div class="stat-value">0</div>
+              <div class="stat-value">${devicesCount}</div>
               <div class="stat-sub">${t("manageDevices")}</div>
             </div>
             <div class="stat">
               <div class="stat-title">${t("healthMetrics")}</div>
-              <div class="stat-value">0</div>
+              <div class="stat-value">${vitalsCount}</div>
               <div class="stat-sub">${t("healthMetrics")}</div>
             </div>
           </div>
@@ -1811,7 +1839,7 @@ async function loadDevices() {
     const listDiv = document.getElementById("devices-list");
 
     if (!devices || devices.length === 0) {
-      listDiv.innerHTML = t("noDevices");
+      listDiv.innerHTML = `<div class="empty-state">${t("noDevices")}</div>`;
       return;
     }
 
@@ -1826,10 +1854,10 @@ async function loadDevices() {
         <div class="device-info">
           <div class="device-name">${device.deviceName}</div>
           <div class="device-type">${device.deviceType}</div>
-          <div class="device-date">Connected: ${connectedDate}</div>
+          <div class="device-date">${t("connectDate")}: ${connectedDate}</div>
         </div>
-        <div class="device-status ${statusClass}">${device.status}</div>
-        ${device.status === "connected" ? `<button class="btn small danger" onclick="disconnectDevice('${device.id}')">Disconnect</button>` : ""}
+        <div class="device-status ${statusClass}">${t("connectedLabel")}</div>
+        ${device.status === "connected" ? `<button class="btn small danger" onclick="disconnectDevice('${device.id}')">${t("disconnect")}</button>` : ""}
       </li>`;
     });
     html += "</ul>";
@@ -1837,20 +1865,20 @@ async function loadDevices() {
   } catch (err) {
     console.error("Load devices failed:", err);
     document.getElementById("devices-list").innerHTML =
-      "Failed to load devices.";
+      `<div class="empty-state">${t("failedToLoadDevices")}</div>`;
   }
 }
 
 async function disconnectDevice(deviceId) {
-  if (!confirm("Are you sure you want to disconnect this device?")) return;
+  if (!confirm(t("confirmDisconnect"))) return;
 
   try {
     await apiCall(`/devices/${deviceId}`, "DELETE");
-    alert("Device disconnected successfully!");
+    alert(t("deviceDisconnected"));
     loadDevices();
   } catch (err) {
     console.error("Disconnect device failed:", err);
-    alert("Failed to disconnect device. Please try again.");
+    alert(t("deviceDisconnectFailed"));
   }
 }
 
