@@ -99,6 +99,22 @@ body {
   color: #f8f9ff;
   border: 1px solid #3a416c;
 }
+[data-theme="dark"] .symptom-card,
+[data-theme="dark"] .symptom-card textarea,
+[data-theme="dark"] .symptom-card h3,
+[data-theme="dark"] .symptom-card .muted {
+  background: #1f1f2f;
+  color: #e9eaff;
+}
+[data-theme="dark"] .symptom-card textarea {
+  border-color: #3f4a74;
+  background: #252a44;
+  color: #f8f9ff;
+}
+[data-theme="dark"] .symptom-card textarea:focus {
+  background: #2b3050;
+  border-color: #5f7ef2;
+}
 body.auth-page {
   margin: 0 !important;
   width: 100% !important;

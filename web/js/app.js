@@ -61,6 +61,8 @@ const translations = {
       "This analysis is for informational purposes only and is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.",
     close: "Close",
     describeSymptoms: "Describe your symptoms",
+    symptomPlaceholder: "e.g. I have a headache and sore throat...",
+    example: "e.g.",
     symptomReports: "Symptom Reports",
     activeReminders: "Active Reminders",
     connectedDevices: "Connected Devices",
@@ -99,6 +101,8 @@ const translations = {
       "Бұл талдау ақпараттық мақсатта ғана және кәсіби медициналық кеңес орнына қолданылмайды. Дұрыс диагноз бен емдеу үшін дәрігерге қаралыңыз.",
     close: "Жабу",
     describeSymptoms: "Симптомдарыңызды сипаттаңыз",
+    symptomPlaceholder: "мысалы: иық ауруы, қызба...",
+    example: "мысалы",
     symptomReports: "Симптом есептері",
     activeReminders: "Қолданыстағы еске салғыштар",
     connectedDevices: "Қосылған құрылғылар",
@@ -137,6 +141,8 @@ const translations = {
       "Этот анализ предназначен только для информационных целей и не является заменой профессиональной медицинской помощи. Пожалуйста, обратитесь к врачу для постановки диагноза и лечения.",
     close: "Закрыть",
     describeSymptoms: "Опишите свои симптомы",
+    symptomPlaceholder: "например: болит плечо и горло...",
+    example: "например",
     symptomReports: "Отчеты по симптомам",
     activeReminders: "Активные напоминания",
     connectedDevices: "Подключенные устройства",
@@ -163,14 +169,27 @@ function setLanguage(lang) {
   render();
 }
 
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  localStorage.setItem("theme", theme);
+}
+
 function toggleTheme() {
   const cur = document.documentElement.getAttribute("data-theme");
   if (cur === "dark") {
-    document.documentElement.removeAttribute("data-theme");
+    applyTheme("light");
   } else {
-    document.documentElement.setAttribute("data-theme", "dark");
+    applyTheme("dark");
   }
 }
+
+// initialize theme from localStorage
+const initialTheme = localStorage.getItem("theme") || "light";
+applyTheme(initialTheme);
 
 // Restore currentUser from localStorage
 if (localStorage.getItem("currentUser")) {
@@ -450,7 +469,7 @@ function renderPatientDashboard() {
           <div class="card symptom-card">
             <h3>${t("symptomAnalysis")}</h3>
             <p class="muted">${t("describeSymptoms")}</p>
-            <textarea id="symptom-input" placeholder="e.g. I have a headache and sore throat..."></textarea>
+            <textarea id="symptom-input" placeholder="${t("symptomPlaceholder")}"></textarea>
             <div class="actions">
               <button id="analyze-btn" class="btn primary">
                 <span class="btn-icon">🔍</span> ${t("analyze")}
@@ -742,7 +761,7 @@ function attachPatientDashboardHandlers() {
         </ul></div>`;
 
         // Disclaimer
-        html += `<div style="font-size:0.9em; color:#d32f2f; background-color:#fff3e0; margin-top:16px; padding:14px; border-left:5px solid #d32f2f; border-radius:4px; border: 1px solid #ffb74d;"><strong>⚖️ Medical Disclaimer:</strong><br><span style="line-height:1.6;">${result.disclaimer} <strong>Always consult with a healthcare professional for proper diagnosis and treatment.</strong></span></div>`;
+        html += `<div style="font-size:0.9em; color:#d32f2f; background-color:#fff3e0; margin-top:16px; padding:14px; border-left:5px solid #d32f2f; border-radius:4px; border: 1px solid #ffb74d;"><strong>⚖️ Medical Disclaimer:</strong><br><span style="line-height:1.6;">${disclaimer} <strong>Always consult with a healthcare professional for proper diagnosis and treatment.</strong></span></div>`;
 
         resultDiv.innerHTML = html;
 
