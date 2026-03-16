@@ -36,6 +36,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-size: 16px;
 }
+
+[data-theme="dark"] body,
+body.dark-mode {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] body.auth-page {
+  background: #0f172a;
+}
+
 .topbar,
 .card,
 .modal,

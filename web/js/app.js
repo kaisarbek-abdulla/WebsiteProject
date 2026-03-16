@@ -61,7 +61,7 @@ const translations = {
       "This analysis is for informational purposes only and is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.",
     close: "Close",
     describeSymptoms: "Describe your symptoms",
-    symptomPlaceholder: "e.g. I have a headache and sore throat...",
+    symptomPlaceholder: "e.g. headache, fatigue, sore throat...",
     example: "e.g.",
     symptomReports: "Symptom Reports",
     activeReminders: "Active Reminders",
@@ -75,7 +75,16 @@ const translations = {
     noDevices: "No devices connected",
     history: "History",
     noSymptomsLogged: "No symptoms logged yet.",
-    yourSymptoms: "Your Symptoms",
+    heartRate: "Heart Rate",
+    bloodPressure: "Blood Pressure",
+    oxygen: "Oxygen",
+    steps: "Steps",
+    weight: "Weight",
+    temperature: "Temperature",
+    pulse: "Pulse",
+    breathing: "Breathing",
+    symptomFocus: "Symptom Input",
+    symptomExample: "e.g. headache, fever, cough",
   },
   kz: {
     welcome: "Қош келдіңіз",
@@ -101,7 +110,7 @@ const translations = {
       "Бұл талдау ақпараттық мақсатта ғана және кәсіби медициналық кеңес орнына қолданылмайды. Дұрыс диагноз бен емдеу үшін дәрігерге қаралыңыз.",
     close: "Жабу",
     describeSymptoms: "Симптомдарыңызды сипаттаңыз",
-    symptomPlaceholder: "мысалы: иық ауруы, қызба...",
+    symptomPlaceholder: "мысалы: бас ауруы, температура, жөтел...",
     example: "мысалы",
     symptomReports: "Симптом есептері",
     activeReminders: "Қолданыстағы еске салғыштар",
@@ -115,7 +124,16 @@ const translations = {
     noDevices: "Құрылғылар қосылмаған",
     history: "Тарих",
     noSymptomsLogged: "Симптомдар сақталмады.",
-    yourSymptoms: "Сіздің симптомдарыңыз",
+    heartRate: "Жүрек соғысы",
+    bloodPressure: "Қан қысымы",
+    oxygen: "Оттегі",
+    steps: "Қадамдар",
+    weight: "Салмақ",
+    temperature: "Температура",
+    pulse: "Пульс",
+    breathing: "Тыныс",
+    symptomFocus: "Симптом енгізу",
+    symptomExample: "мысалы: бас ауруы, ауыру, жөтел",
   },
   ru: {
     welcome: "Добро пожаловать",
@@ -141,7 +159,7 @@ const translations = {
       "Этот анализ предназначен только для информационных целей и не является заменой профессиональной медицинской помощи. Пожалуйста, обратитесь к врачу для постановки диагноза и лечения.",
     close: "Закрыть",
     describeSymptoms: "Опишите свои симптомы",
-    symptomPlaceholder: "например: болит плечо и горло...",
+    symptomPlaceholder: "например: головная боль, температура, кашель...",
     example: "например",
     symptomReports: "Отчеты по симптомам",
     activeReminders: "Активные напоминания",
@@ -155,7 +173,16 @@ const translations = {
     noDevices: "Устройства не подключены",
     history: "История",
     noSymptomsLogged: "Симптомы не зарегистрированы.",
-    yourSymptoms: "Ваши симптомы",
+    heartRate: "Пульс",
+    bloodPressure: "Артериальное давление",
+    oxygen: "Кислород",
+    steps: "Шаги",
+    weight: "Вес",
+    temperature: "Температура",
+    pulse: "Пульс",
+    breathing: "Дыхание",
+    symptomFocus: "Поле симптомов",
+    symptomExample: "например: головная боль, слабость, кашель",
   },
 };
 function t(key) {
@@ -170,25 +197,30 @@ function setLanguage(lang) {
 }
 
 function applyTheme(theme) {
-  if (theme === "dark") {
+  const normalized = theme === "dark" ? "dark" : "light";
+  if (normalized === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
+    document.body.classList.add("dark-mode");
   } else {
     document.documentElement.removeAttribute("data-theme");
+    document.body.classList.remove("dark-mode");
   }
-  localStorage.setItem("theme", theme);
+  localStorage.setItem("theme", normalized);
 }
 
 function toggleTheme() {
-  const cur = document.documentElement.getAttribute("data-theme");
-  if (cur === "dark") {
-    applyTheme("light");
-  } else {
-    applyTheme("dark");
-  }
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  applyTheme(isDark ? "light" : "dark");
 }
 
-// initialize theme from localStorage
-const initialTheme = localStorage.getItem("theme") || "light";
+// initialize theme from localStorage or system preference
+const storedTheme = localStorage.getItem("theme");
+const initialTheme =
+  storedTheme === "dark" || storedTheme === "light"
+    ? storedTheme
+    : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 applyTheme(initialTheme);
 
 // Restore currentUser from localStorage
@@ -216,15 +248,24 @@ async function apiCall(endpoint, method = "GET", body = null) {
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, options);
     if (!res.ok) {
+      let message = res.statusText;
+      try {
+        const body = await res.json();
+        if (body && body.error) message = body.error;
+        else if (body && body.message) message = body.message;
+      } catch (e) {
+        // ignore parse errors
+      }
+
       if (res.status === 401) {
         authToken = null;
         currentUser = null;
         localStorage.removeItem("authToken");
         localStorage.removeItem("currentUser");
         navigate("login");
-        throw new Error("Unauthorized");
+        throw new Error(message || "Unauthorized");
       }
-      throw new Error(`API Error: ${res.statusText}`);
+      throw new Error(message || `API Error: ${res.status}`);
     }
     return await res.json();
   } catch (err) {
@@ -360,6 +401,7 @@ function attachLoginHandlers() {
       navigate("dashboard");
     } catch (err) {
       console.error("Login failed:", err);
+      alert("Login failed: " + (err.message || "Please check your credentials"));
     }
   });
 }
@@ -442,6 +484,7 @@ function attachRegisterHandlers() {
         navigate("dashboard");
       } catch (err) {
         console.error("Registration failed:", err);
+        alert("Registration failed: " + (err.message || "Could not create account"));
       }
     });
 }
@@ -510,27 +553,27 @@ function renderPatientDashboard() {
           <h4>${t("healthMetrics")}</h4>
           <div class="metrics-list">
             <div class="metric"> <div class="metric-icon">💓</div>
-              <div class="metric-label">Heart Rate</div>
+              <div class="metric-label">${t("heartRate")}</div>
               <div class="metric-value">No data</div>
             </div>
             <div class="metric"> <div class="metric-icon">🩺</div>
-              <div class="metric-label">Blood Pressure</div>
+              <div class="metric-label">${t("bloodPressure")}</div>
               <div class="metric-value">No data</div>
             </div>
             <div class="metric"> <div class="metric-icon">🫁</div>
-              <div class="metric-label">Oxygen</div>
+              <div class="metric-label">${t("oxygen")}</div>
               <div class="metric-value">No data</div>
             </div>
             <div class="metric"> <div class="metric-icon">🥾</div>
-              <div class="metric-label">Steps</div>
+              <div class="metric-label">${t("steps")}</div>
               <div class="metric-value">No data</div>
             </div>
             <div class="metric"> <div class="metric-icon">⚖️</div>
-              <div class="metric-label">Weight</div>
+              <div class="metric-label">${t("weight")}</div>
               <div class="metric-value">No data</div>
             </div>
             <div class="metric"> <div class="metric-icon">🌡️</div>
-              <div class="metric-label">Temperature</div>
+              <div class="metric-label">${t("temperature")}</div>
               <div class="metric-value">No data</div>
             </div>
           </div>
@@ -1000,7 +1043,7 @@ function renderSymptoms() {
         <form id="symptom-form" class="modal-form">
           <div class="form-group">
             <label for="symptom-text">${t("yourSymptoms")}</label>
-            <textarea id="symptom-text" placeholder="e.g. headache, fatigue..." required></textarea>
+            <textarea id="symptom-text" placeholder="${t("symptomExample")}" required></textarea>
           </div>
           <button class="btn primary" onclick="submitSymptom(event)">${t("analyze")}</button>
         </form>
@@ -1047,10 +1090,10 @@ function renderVitals() {
       <div class="page-header"><h2>${t("vitals")}</h2><p class="subtitle">Learn how your body is doing over time.</p></div>
       <div class="stats-grid" id="vitals-grid">
         <!-- placeholders for charts -->
-        <div class="stat">Heart Rate<br><div class="empty-chart">No data</div></div>
-        <div class="stat">Blood Pressure<br><div class="empty-chart">No data</div></div>
-        <div class="stat">Oxygen<br><div class="empty-chart">No data</div></div>
-        <div class="stat">Temperature<br><div class="empty-chart">No data</div></div>
+        <div class="stat">${t("heartRate")}<br><div class="empty-chart">No data</div></div>
+        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">No data</div></div>
+        <div class="stat">${t("oxygen")}<br><div class="empty-chart">No data</div></div>
+        <div class="stat">${t("temperature")}<br><div class="empty-chart">No data</div></div>
       </div>
       <div class="card" style="margin-top:24px;">
         <h3>Recent readings</h3>
