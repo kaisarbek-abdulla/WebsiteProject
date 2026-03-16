@@ -127,6 +127,7 @@ const translations = {
     submit: "Submit",
     previousSubmissions: "Previous submissions",
     noSubmissionsYet: "You haven't submitted anything yet.",
+    viewVitals: "View vitals",
     addReminderDialog: "Add reminder dialog (demo)",
     foodAddedDemo: "Food item added (demo)",
   },
@@ -220,6 +221,7 @@ const translations = {
     submit: "Жіберу",
     previousSubmissions: "Алдыңғы жіберілгендер",
     noSubmissionsYet: "Сіз әлі ештеңе жібермедіңіз.",
+    viewVitals: "Көрсеткіштерді көру",
     addReminderDialog: "Еске салғыш диалогы (демо)",
     foodAddedDemo: "Тағам элементі қосылды (демо)",
   },
@@ -314,6 +316,7 @@ const translations = {
     submit: "Отправить",
     previousSubmissions: "Предыдущие отправки",
     noSubmissionsYet: "Вы ещё ничего не отправили.",
+    viewVitals: "Просмотреть показатели",
     addReminderDialog: "Диалог добавления напоминания (демо)",
     foodAddedDemo: "Блюдо добавлено (демо)",
   },
@@ -410,16 +413,35 @@ async function apiCall(endpoint, method = "GET", body = null) {
 }
 
 // Simple routing
-let currentPage = "dashboard";
+function getInitialPage() {
+  const hashPage = window.location.hash.replace("#", "");
+  if (hashPage) return hashPage;
+  const savedPage = localStorage.getItem("currentPage");
+  if (savedPage) return savedPage;
+  return "dashboard";
+}
 
-function navigate(page) {
+let currentPage = getInitialPage();
+
+function navigate(page, updateUrl = true) {
   currentPage = page;
+  if (updateUrl) {
+    window.location.hash = page;
+  }
+  if (page !== "login" && page !== "register") {
+    localStorage.setItem("currentPage", page);
+  }
   document.body.classList.toggle(
     "auth-page",
     page === "login" || page === "register",
   );
   render();
 }
+
+window.addEventListener("hashchange", () => {
+  const page = window.location.hash.replace("#", "") || "dashboard";
+  navigate(page, false);
+});
 
 function render() {
   const root = document.getElementById("app-root");
@@ -694,29 +716,30 @@ function renderPatientDashboard() {
           <div class="metrics-list">
             <div class="metric"> <div class="metric-icon">💓</div>
               <div class="metric-label">${t("heartRate")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
             <div class="metric"> <div class="metric-icon">🩺</div>
               <div class="metric-label">${t("bloodPressure")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
             <div class="metric"> <div class="metric-icon">🫁</div>
               <div class="metric-label">${t("oxygen")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
             <div class="metric"> <div class="metric-icon">🥾</div>
               <div class="metric-label">${t("steps")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
             <div class="metric"> <div class="metric-icon">⚖️</div>
               <div class="metric-label">${t("weight")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
             <div class="metric"> <div class="metric-icon">🌡️</div>
               <div class="metric-label">${t("temperature")}</div>
-              <div class="metric-value">No data</div>
+              <div class="metric-value">${t("noData")}</div>
             </div>
           </div>
+          <div style="margin-top:12px; text-align:right;"><button id="dashboard-vitals-btn" class="btn primary">${t("viewVitals")}</button></div>
         </div>
       </section>
 
@@ -956,6 +979,13 @@ function attachPatientDashboardHandlers() {
         analyzeBtn.textContent = "Analyze";
         analyzeBtn.disabled = false;
       }
+    });
+  }
+
+  const vitalsBtn = document.getElementById("dashboard-vitals-btn");
+  if (vitalsBtn) {
+    vitalsBtn.addEventListener("click", () => {
+      navigate("vitals");
     });
   }
 }
@@ -2009,11 +2039,16 @@ async function validateSession() {
     return;
   }
 
-  // If we have token and currentUser data, just show dashboard
-  // Actual validation will happen when making API calls
+  // If we have token and currentUser data, restore last page (not always dashboard)
   if (currentUser && currentUser.id) {
-    console.log("CurrentUser exists, showing dashboard:", currentUser.id);
-    currentPage = "dashboard";
+    const restorePage = getInitialPage();
+    console.log(
+      "CurrentUser exists, restoring page:",
+      restorePage,
+      "user:",
+      currentUser.id,
+    );
+    currentPage = restorePage === "login" || restorePage === "register" ? "dashboard" : restorePage;
     render();
     return;
   }
