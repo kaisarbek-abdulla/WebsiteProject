@@ -141,6 +141,7 @@ let currentPage = 'dashboard';
 
 function navigate(page) {
   currentPage = page;
+  document.body.classList.toggle('auth-page', page === 'login' || page === 'register');
   render();
 }
 
@@ -210,12 +211,12 @@ function renderLogin() {
         <p>Sign in to your account</p>
         
         <div class="form-group">
-          <label>📧 Email Address</label>
+          <label>Email Address</label>
           <input type="email" id="login-email" placeholder="user@example.com" />
         </div>
         
         <div class="form-group">
-          <label>🔐 Password</label>
+          <label>Password</label>
           <input type="password" id="login-password" placeholder="••••••••" />
         </div>
         
@@ -267,12 +268,12 @@ function renderRegister() {
         </div>
         
         <div class="form-group">
-          <label>📧 Email Address</label>
+          <label>Email Address</label>
           <input type="email" id="register-email" placeholder="user@example.com" />
         </div>
         
         <div class="form-group">
-          <label>🔐 Password</label>
+          <label>Password</label>
           <input type="password" id="register-password" placeholder="••••••••" />
         </div>
 

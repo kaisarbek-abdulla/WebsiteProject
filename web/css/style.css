@@ -28,6 +28,10 @@ body{
   -moz-osx-font-smoothing:grayscale;
   font-size:16px;
 }
+body.auth-page{
+  margin-left:0 !important;
+  background: #fafbfc;
+}
 
 /* Auth Pages */
 .auth-container{
@@ -36,11 +40,13 @@ body{
   align-items:center;
   min-height:100vh;
   padding:20px;
+  width:100%;
   background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  margin: 0;
   /* container used on login/register pages to center the card vertically */
 }
 .auth-card{
-  background:var(--card);
+  background:#fff;
   width:100%;
   max-width:420px;
   padding:48px 40px;
@@ -52,13 +58,7 @@ body{
   overflow:hidden;
 }
 .auth-card::before{
-  content:'';
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  height:4px;
-  background:linear-gradient(90deg, var(--primary), var(--accent));
+  display:none;
 }
 .logo-large{
   width:80px;
