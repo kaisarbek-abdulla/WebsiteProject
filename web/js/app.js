@@ -1382,7 +1382,10 @@ function showSymptomAnalysis(result) {
     ? safeResult.parsedSymptoms
     : [];
   const severity = safeResult.severity || "unknown";
-  const scoreClass = severity && severity !== "unknown" ? `severity-${severity}` : "severity-low";
+  const scoreClass =
+    severity && severity !== "unknown"
+      ? `severity-${severity}`
+      : "severity-low";
 
   const modal = document.createElement("div");
   modal.className = "modal-overlay";
