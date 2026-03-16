@@ -160,9 +160,14 @@ function render() {
   const root = document.getElementById("app-root");
   if (!root) return;
 
+  // Add class for auth page center layout
+  const isAuthPage = currentPage === "login" || currentPage === "register";
+  document.body.classList.toggle("auth-page", isAuthPage);
+
   // Show login if not authenticated
   if (!authToken && currentPage !== "login" && currentPage !== "register") {
     currentPage = "login";
+    document.body.classList.add("auth-page");
   }
 
   switch (currentPage) {

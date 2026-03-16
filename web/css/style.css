@@ -37,8 +37,11 @@ body {
   font-size: 16px;
 }
 body.auth-page {
-  margin-left: 0 !important;
-  background: #fafbfc;
+  margin: 0 !important;
+  width: 100% !important;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #f8fafc;
 }
 
 /* Auth Pages */
@@ -49,8 +52,9 @@ body.auth-page {
   min-height: 100vh;
   padding: 20px;
   width: 100%;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
   margin: 0;
+  overflow: hidden;
   /* container used on login/register pages to center the card vertically */
 }
 .auth-card {
@@ -267,8 +271,11 @@ body.auth-page {
 
 /* when sidebar is present on desktop add left offset */
 @media (min-width: 768px) {
-  body {
+  body:not(.auth-page) {
     margin-left: 220px;
+  }
+  body.auth-page {
+    margin-left: 0 !important;
   }
   .container {
     margin-left: 0;
