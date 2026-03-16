@@ -231,7 +231,7 @@ const translations = {
     noSubmissionsYet: "Сіз әлі ештеңе жібермедіңіз.",
     reminderRequired: "Еске салғыш мәтінін енгізіңіз.",
     connectedLabel: "Қосылған",
-    connectDate: "Қосылған",    
+    connectDate: "Қосылған",
     disconnect: "Өшіру",
     confirmDisconnect: "Бұл құрылғыны ажыратқыңыз келетініне сенімдісіз бе?",
     deviceDisconnected: "Құрылғы сәтті ажыратылды!",
@@ -338,7 +338,8 @@ const translations = {
     disconnect: "Отключить",
     confirmDisconnect: "Вы уверены, что хотите отключить это устройство?",
     deviceDisconnected: "Устройство успешно отключено!",
-    deviceDisconnectFailed: "Не удалось отключить устройство. Пожалуйста, попробуйте снова.",
+    deviceDisconnectFailed:
+      "Не удалось отключить устройство. Пожалуйста, попробуйте снова.",
     failedToLoadDevices: "Не удалось загрузить устройства.",
     viewVitals: "Просмотреть показатели",
     addReminderDialog: "Диалог добавления напоминания (демо)",
@@ -690,8 +691,12 @@ function renderDashboard() {
 function renderPatientDashboard() {
   const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
   const reminderCount = reminders.length;
-  const vitalsCount = JSON.parse(localStorage.getItem("userVitals") || "[]").length;
-  const devicesCount = JSON.parse(localStorage.getItem("localDevices") || "[]").length;
+  const vitalsCount = JSON.parse(
+    localStorage.getItem("userVitals") || "[]",
+  ).length;
+  const devicesCount = JSON.parse(
+    localStorage.getItem("localDevices") || "[]",
+  ).length;
   return `
     ${renderHeader()}
     ${renderNav()}
