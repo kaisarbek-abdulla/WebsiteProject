@@ -86,7 +86,9 @@ body {
   background: #1e1e2f;
   color: #e9efff;
 }
-[data-theme="dark"] .ai-response, [data-theme="dark"] .analysis-section, [data-theme="dark"] .analysis-disclaimer {
+[data-theme="dark"] .ai-response,
+[data-theme="dark"] .analysis-section,
+[data-theme="dark"] .analysis-disclaimer {
   background: #262a45;
   color: #e9ebff;
 }

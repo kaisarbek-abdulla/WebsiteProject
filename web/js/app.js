@@ -619,10 +619,17 @@ function attachPatientDashboardHandlers() {
             : detectedSymptoms.length;
         const urgency = result.urgency || "";
         const severityVal = result.severity || "Low";
-        const conditions = Array.isArray(result.conditions) ? result.conditions : [];
+        const conditions = Array.isArray(result.conditions)
+          ? result.conditions
+          : [];
         const analysisText =
-          result.analysis || result.aiAnalysis || result.text || "No analysis available.";
-        const treatments = Array.isArray(result.treatments) ? result.treatments : [];
+          result.analysis ||
+          result.aiAnalysis ||
+          result.text ||
+          "No analysis available.";
+        const treatments = Array.isArray(result.treatments)
+          ? result.treatments
+          : [];
         const diagnosticTests = Array.isArray(result.diagnosticTests)
           ? result.diagnosticTests
           : [];
@@ -1393,7 +1400,10 @@ function connectDevice() {
 function showSymptomAnalysis(result) {
   const safeResult = result || {};
   const analysis =
-    safeResult.aiAnalysis || safeResult.analysis || safeResult.text || "No analysis available.";
+    safeResult.aiAnalysis ||
+    safeResult.analysis ||
+    safeResult.text ||
+    "No analysis available.";
   const parsedSymptoms = Array.isArray(safeResult.parsedSymptoms)
     ? safeResult.parsedSymptoms
     : [];
