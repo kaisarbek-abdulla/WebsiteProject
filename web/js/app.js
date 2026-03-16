@@ -1206,7 +1206,8 @@ function renderReminders() {
       ? `<div class="empty-state">${t("noRemindersYet")}</div>`
       : `<ul class="reminders-list">${reminders
           .map(
-            (r) => `<li class="reminder-item"><strong>${new Date(r.createdAt).toLocaleString()}:</strong> ${r.message}</li>`,
+            (r) =>
+              `<li class="reminder-item"><strong>${new Date(r.createdAt).toLocaleString()}:</strong> ${r.message}</li>`,
           )
           .join("")}</ul>`;
   return `${renderHeader()}${renderNav()}<main class="container">
@@ -1233,7 +1234,11 @@ function attachRemindersHandlers() {
         return;
       }
       const existing = JSON.parse(localStorage.getItem("reminders") || "[]");
-      existing.push({ id: Date.now(), message: text, createdAt: new Date().toISOString() });
+      existing.push({
+        id: Date.now(),
+        message: text,
+        createdAt: new Date().toISOString(),
+      });
       localStorage.setItem("reminders", JSON.stringify(existing));
       textEl.value = "";
       render();
@@ -1326,7 +1331,10 @@ function renderReports() {
     reports.length === 0
       ? `<li class="empty-state">${t("noReportsGenerated")}</li>`
       : reports
-          .map((r) => `<li>${new Date(r.createdAt).toLocaleString()}: ${r.title}</li>`)
+          .map(
+            (r) =>
+              `<li>${new Date(r.createdAt).toLocaleString()}: ${r.title}</li>`,
+          )
           .join("");
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("reports")}</h2><p class="subtitle">${t("reportsSubtitle")}</p></div>
@@ -1347,7 +1355,9 @@ function attachReportsHandlers() {
       user: currentUser?.email || "guest",
       reports,
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

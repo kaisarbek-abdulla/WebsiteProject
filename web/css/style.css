@@ -130,7 +130,10 @@ body.dark-mode {
   background: #2b3050;
   border-color: #5f7ef2;
 }
-input, textarea, select, button {
+input,
+textarea,
+select,
+button {
   color: #111827;
   background-color: #fff;
 }
