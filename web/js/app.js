@@ -16,7 +16,7 @@ const API_BASE = (function () {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("../../frontend/sw.js")
+      .register("../sw.js")
       .then((registration) => {
         console.log("SW registered:", registration);
       })
@@ -605,18 +605,33 @@ function attachPatientDashboardHandlers() {
         analyzeBtn.textContent = "Analyzing...";
 
         const result = await apiCall("/symptoms/analyze", "POST", { text });
+        if (!result || typeof result !== "object") {
+          throw new Error("Invalid analysis response from server.");
+        }
 
         // normalize fields with defaults so UI doesn't break
-        const detectedSymptoms = result.detectedSymptoms || [];
-        const symptomsCount = result.symptomsCount || detectedSymptoms.length;
+        const detectedSymptoms = Array.isArray(result.detectedSymptoms)
+          ? result.detectedSymptoms
+          : [];
+        const symptomsCount =
+          typeof result.symptomsCount === "number"
+            ? result.symptomsCount
+            : detectedSymptoms.length;
         const urgency = result.urgency || "";
         const severityVal = result.severity || "Low";
-        const conditions = result.conditions || [];
-        const analysisText = result.analysis || result.aiAnalysis || "";
-        const treatments = result.treatments || [];
-        const diagnosticTests = result.diagnosticTests || [];
-        const healthAdvice = result.healthAdvice || [];
-        const disclaimer = result.disclaimer || "";
+        const conditions = Array.isArray(result.conditions) ? result.conditions : [];
+        const analysisText =
+          result.analysis || result.aiAnalysis || result.text || "No analysis available.";
+        const treatments = Array.isArray(result.treatments) ? result.treatments : [];
+        const diagnosticTests = Array.isArray(result.diagnosticTests)
+          ? result.diagnosticTests
+          : [];
+        const healthAdvice = Array.isArray(result.healthAdvice)
+          ? result.healthAdvice
+          : [];
+        const disclaimer =
+          result.disclaimer ||
+          "This analysis is for educational purposes only. Consult a healthcare professional.";
 
         resultDiv.style.display = "block";
         let html = `<strong style="font-size:1.2em; color:#1a1a1a;">📋 Comprehensive Analysis Result</strong><br><hr style="margin:10px 0; border:none; border-top:2px solid #e0e0e0;"><br>`;
@@ -1377,7 +1392,8 @@ function connectDevice() {
 
 function showSymptomAnalysis(result) {
   const safeResult = result || {};
-  const analysis = safeResult.aiAnalysis || "No analysis available.";
+  const analysis =
+    safeResult.aiAnalysis || safeResult.analysis || safeResult.text || "No analysis available.";
   const parsedSymptoms = Array.isArray(safeResult.parsedSymptoms)
     ? safeResult.parsedSymptoms
     : [];
