@@ -50,7 +50,30 @@ const translations = {
     profile: "Profile",
     logout: "Logout",
     analyze: "Analyze",
-    // ... add more as needed
+    symptomAnalysis: "Symptom Analysis",
+    yourSymptoms: "Your Symptoms",
+    aiAnalysis: "AI Analysis",
+    detectedSymptoms: "Detected Symptoms",
+    noSpecificSymptomsDetected: "No specific symptoms detected",
+    severityLevel: "Severity Level",
+    important: "Important:",
+    analysisDisclaimer:
+      "This analysis is for informational purposes only and is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.",
+    close: "Close",
+    describeSymptoms: "Describe your symptoms",
+    symptomReports: "Symptom Reports",
+    activeReminders: "Active Reminders",
+    connectedDevices: "Connected Devices",
+    healthMetrics: "Health Metrics",
+    reminders: "Reminders",
+    connectedDevicesTitle: "Connected Devices",
+    manageReminders: "Manage your health reminders",
+    manageDevices: "Manage wearable devices",
+    noReminders: "No reminders set",
+    noDevices: "No devices connected",
+    history: "History",
+    noSymptomsLogged: "No symptoms logged yet.",
+    yourSymptoms: "Your Symptoms",
   },
   kz: {
     welcome: "Қош келдіңіз",
@@ -65,6 +88,30 @@ const translations = {
     profile: "Профиль",
     logout: "Шығу",
     analyze: "Талдау",
+    symptomAnalysis: "Симптомдарды талдау",
+    yourSymptoms: "Сіздің симптомдарыңыз",
+    aiAnalysis: "AI талдамасы",
+    detectedSymptoms: "Анықталған симптомдар",
+    noSpecificSymptomsDetected: "Арнайы симптомдар табылмады",
+    severityLevel: "Ауырлық деңгейі",
+    important: "Маңызды:",
+    analysisDisclaimer:
+      "Бұл талдау ақпараттық мақсатта ғана және кәсіби медициналық кеңес орнына қолданылмайды. Дұрыс диагноз бен емдеу үшін дәрігерге қаралыңыз.",
+    close: "Жабу",
+    describeSymptoms: "Симптомдарыңызды сипаттаңыз",
+    symptomReports: "Симптом есептері",
+    activeReminders: "Қолданыстағы еске салғыштар",
+    connectedDevices: "Қосылған құрылғылар",
+    healthMetrics: "Денсаулық көрсеткіштері",
+    reminders: "Еске салғыштар",
+    connectedDevicesTitle: "Қосылған құрылғылар",
+    manageReminders: "Денсаулық еске салғыштарын басқарыңыз",
+    manageDevices: "Құрылғыларды басқарыңыз",
+    noReminders: "Еске салғыштар жоқ",
+    noDevices: "Құрылғылар қосылмаған",
+    history: "Тарих",
+    noSymptomsLogged: "Симптомдар сақталмады.",
+    yourSymptoms: "Сіздің симптомдарыңыз",
   },
   ru: {
     welcome: "Добро пожаловать",
@@ -79,6 +126,30 @@ const translations = {
     profile: "Профиль",
     logout: "Выйти",
     analyze: "Анализировать",
+    symptomAnalysis: "Анализ симптомов",
+    yourSymptoms: "Ваши симптомы",
+    aiAnalysis: "AI-анализ",
+    detectedSymptoms: "Обнаруженные симптомы",
+    noSpecificSymptomsDetected: "Специфические симптомы не обнаружены",
+    severityLevel: "Уровень тяжести",
+    important: "Важно:",
+    analysisDisclaimer:
+      "Этот анализ предназначен только для информационных целей и не является заменой профессиональной медицинской помощи. Пожалуйста, обратитесь к врачу для постановки диагноза и лечения.",
+    close: "Закрыть",
+    describeSymptoms: "Опишите свои симптомы",
+    symptomReports: "Отчеты по симптомам",
+    activeReminders: "Активные напоминания",
+    connectedDevices: "Подключенные устройства",
+    healthMetrics: "Показатели здоровья",
+    reminders: "Напоминания",
+    connectedDevicesTitle: "Подключенные устройства",
+    manageReminders: "Управляйте напоминаниями",
+    manageDevices: "Управляйте устройствами",
+    noReminders: "Нет напоминаний",
+    noDevices: "Устройства не подключены",
+    history: "История",
+    noSymptomsLogged: "Симптомы не зарегистрированы.",
+    yourSymptoms: "Ваши симптомы",
   },
 };
 function t(key) {
@@ -377,8 +448,8 @@ function renderPatientDashboard() {
       <section class="row top-row">
         <div class="col-lg-8">
           <div class="card symptom-card">
-            <h3>Symptom Analysis</h3>
-            <p class="muted">Describe your symptoms</p>
+            <h3>${t("symptomAnalysis")}</h3>
+            <p class="muted">${t("describeSymptoms")}</p>
             <textarea id="symptom-input" placeholder="e.g. I have a headache and sore throat..."></textarea>
             <div class="actions">
               <button id="analyze-btn" class="btn primary">
@@ -392,24 +463,24 @@ function renderPatientDashboard() {
         <div class="col-lg-4 stats-col">
           <div class="card stats-grid">
             <div class="stat">
-              <div class="stat-title">Symptom Reports</div>
+              <div class="stat-title">${t("symptomReports")}</div>
               <div class="stat-value">0</div>
-              <div class="stat-sub">Total reports</div>
+              <div class="stat-sub">${t("symptomReports")}</div>
             </div>
             <div class="stat">
-              <div class="stat-title">Active Reminders</div>
+              <div class="stat-title">${t("activeReminders")}</div>
               <div class="stat-value">0</div>
-              <div class="stat-sub">Active alerts</div>
+              <div class="stat-sub">${t("manageReminders")}</div>
             </div>
             <div class="stat">
-              <div class="stat-title">Connected Devices</div>
+              <div class="stat-title">${t("connectedDevicesTitle")}</div>
               <div class="stat-value">0</div>
-              <div class="stat-sub">Active devices</div>
+              <div class="stat-sub">${t("manageDevices")}</div>
             </div>
             <div class="stat">
-              <div class="stat-title">Health Metrics</div>
+              <div class="stat-title">${t("healthMetrics")}</div>
               <div class="stat-value">0</div>
-              <div class="stat-sub">Measurements</div>
+              <div class="stat-sub">${t("healthMetrics")}</div>
             </div>
           </div>
         </div>
@@ -449,14 +520,14 @@ function renderPatientDashboard() {
 
       <section class="row lower-row">
         <div class="card half">
-          <h4>Reminders</h4>
-          <p class="muted">Manage your health reminders</p>
-          <div class="empty-state">🔔 No reminders set</div>
+          <h4>${t("reminders")}</h4>
+          <p class="muted">${t("manageReminders")}</p>
+          <div class="empty-state">🔔 ${t("noReminders")}</div>
         </div>
         <div class="card half">
-          <h4>Connected Devices</h4>
-          <p class="muted">Manage wearable devices</p>
-          <div class="empty-state">⌚ No devices connected</div>
+          <h4>${t("connectedDevicesTitle")}</h4>
+          <p class="muted">${t("manageDevices")}</p>
+          <div class="empty-state">⌚ ${t("noDevices")}</div>
         </div>
       </section>
     </main>
@@ -876,19 +947,19 @@ async function loadComplaints() {
 function renderSymptoms() {
   // form to log new symptom plus history list
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("symptoms")}</h2><p class="subtitle">Describe and log symptoms as they arise.</p></div>
+      <div class="page-header"><h2>${t("symptoms")}</h2><p class="subtitle">${t("describeSymptoms")}</p></div>
       <div class="card">
         <form id="symptom-form" class="modal-form">
           <div class="form-group">
-            <label for="symptom-text">What are you feeling?</label>
+            <label for="symptom-text">${t("yourSymptoms")}</label>
             <textarea id="symptom-text" placeholder="e.g. headache, fatigue..." required></textarea>
           </div>
           <button class="btn primary" onclick="submitSymptom(event)">${t("analyze")}</button>
         </form>
       </div>
       <div class="card">
-        <h3>History</h3>
-        <div id="symptom-history" class="empty-state">No symptoms logged yet.</div>
+        <h3>${t("history") || "History"}</h3>
+        <div id="symptom-history" class="empty-state">${t("noSymptomsLogged") || "No symptoms logged yet."}</div>
       </div>
     </main>${renderFooter()}`;
 }
@@ -1305,42 +1376,50 @@ function connectDevice() {
 }
 
 function showSymptomAnalysis(result) {
+  const safeResult = result || {};
+  const analysis = safeResult.aiAnalysis || "No analysis available.";
+  const parsedSymptoms = Array.isArray(safeResult.parsedSymptoms)
+    ? safeResult.parsedSymptoms
+    : [];
+  const severity = safeResult.severity || "unknown";
+  const scoreClass = severity && severity !== "unknown" ? `severity-${severity}` : "severity-low";
+
   const modal = document.createElement("div");
   modal.className = "modal-overlay";
   modal.innerHTML = `
     <div class="modal analysis-modal">
-      <h3>Symptom Analysis</h3>
+      <h3>${t("symptomAnalysis")}</h3>
       <div class="analysis-content">
         <div class="analysis-section">
-          <h4>Your Symptoms</h4>
-          <p class="symptom-text">"${result.text}"</p>
+          <h4>${t("yourSymptoms")}</h4>
+          <p class="symptom-text">"${safeResult.text || "-"}"</p>
         </div>
         <div class="analysis-section">
-          <h4>AI Analysis</h4>
-          <div class="ai-response">${result.aiAnalysis.replace(/\n/g, "<br>")}</div>
+          <h4>${t("aiAnalysis")}</h4>
+          <div class="ai-response">${analysis.replace(/\n/g, "<br>")}</div>
         </div>
         <div class="analysis-section">
-          <h4>Detected Symptoms</h4>
+          <h4>${t("detectedSymptoms")}</h4>
           <div class="symptoms-tags">
             ${
-              result.parsedSymptoms.length > 0
-                ? result.parsedSymptoms
+              parsedSymptoms.length > 0
+                ? parsedSymptoms
                     .map((s) => `<span class="symptom-tag">${s}</span>`)
                     .join("")
-                : "No specific symptoms detected"
+                : t("noSpecificSymptomsDetected")
             }
           </div>
         </div>
         <div class="analysis-section">
-          <h4>Severity Level</h4>
-          <span class="severity-badge severity-${result.severity}">${result.severity}</span>
+          <h4>${t("severityLevel")}</h4>
+          <span class="severity-badge ${scoreClass}">${severity}</span>
         </div>
         <div class="analysis-disclaimer">
-          <strong>⚠️ Important:</strong> This analysis is for informational purposes only and is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.
+          <strong>⚠️ ${t("important")}</strong> ${t("analysisDisclaimer")}
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn primary" onclick="closeModal()">Close</button>
+        <button class="btn primary" onclick="closeModal()">${t("close")}</button>
       </div>
     </div>
   `;
@@ -1402,7 +1481,7 @@ async function loadSymptomHistory() {
     const historyDiv = document.getElementById("symptom-history");
 
     if (!symptoms || symptoms.length === 0) {
-      historyDiv.innerHTML = "No symptoms logged yet.";
+      historyDiv.innerHTML = t("noSymptomsLogged") || "No symptoms logged yet.";
       return;
     }
 
