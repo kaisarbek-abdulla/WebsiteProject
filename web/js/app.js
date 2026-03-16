@@ -649,12 +649,18 @@ function attachPatientDashboardHandlers() {
         }
 
         // Urgency alert with enhanced styling
-        const urgencyText = typeof urgency === 'string' ? urgency : "";
+        const urgencyText = typeof urgency === "string" ? urgency : "";
         if (urgencyText === "URGENT") {
           html += `<div style="color:#fff; background-color:#d32f2f; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #b71c1c;">⚠️ URGENT ALERT: Call 911 immediately - This requires emergency medical attention!</div>`;
-        } else if (urgencyText.includes("ER") || urgencyText.includes("Emergency")) {
+        } else if (
+          urgencyText.includes("ER") ||
+          urgencyText.includes("Emergency")
+        ) {
           html += `<div style="color:#fff; background-color:#f57c00; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #e65100;">🚨 Emergency Alert: ${urgencyText} - Seek emergency care immediately!</div>`;
-        } else if (urgencyText.includes("Consult") || urgencyText.includes("See")) {
+        } else if (
+          urgencyText.includes("Consult") ||
+          urgencyText.includes("See")
+        ) {
           html += `<div style="color:#d32f2f; background-color:#ffebee; padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid #d32f2f;"><strong>⏱️ Recommended Action:</strong> ${urgencyText}</div>`;
         }
 
