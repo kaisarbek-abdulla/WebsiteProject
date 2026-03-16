@@ -122,6 +122,10 @@ body.dark-mode {
   background: #252a44;
   color: #f8f9ff;
 }
+.symptom-card textarea {
+  color: #111827;
+  background: #fff;
+}
 [data-theme="dark"] .symptom-card textarea:focus {
   background: #2b3050;
   border-color: #5f7ef2;

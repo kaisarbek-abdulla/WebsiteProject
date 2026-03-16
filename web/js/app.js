@@ -73,6 +73,16 @@ const translations = {
     manageDevices: "Manage wearable devices",
     noReminders: "No reminders set",
     noDevices: "No devices connected",
+    noData: "No data",
+    vitalsSubtitle: "Learn how your body is doing over time.",
+    recentReadings: "Recent readings",
+    date: "Date",
+    type: "Type",
+    value: "Value",
+    noReadingsAvailable: "No readings available",
+    reportsSubtitle: "Download summaries and export data.",
+    noReportsGenerated: "No reports generated",
+    noComplaintsFound: "No complaints found.",
     history: "History",
     noSymptomsLogged: "No symptoms logged yet.",
     heartRate: "Heart Rate",
@@ -85,6 +95,34 @@ const translations = {
     breathing: "Breathing",
     symptomFocus: "Symptom Input",
     symptomExample: "e.g. headache, fever, cough",
+    reminderSubtitle: "Stay on track with scheduled alerts.",
+    addReminder: "+ Add reminder",
+    noRemindersYet: "No reminders yet. Click above to add one.",
+    deviceSubtitle: "Link smart watches and trackers for live data.",
+    connectDevice: "Connect new device",
+    connectNewDevice: "Connect New Device",
+    deviceType: "Device Type",
+    deviceName: "Device Name",
+    deviceNameExample: "e.g. My Fitbit Charge 5",
+    cancel: "Cancel",
+    connect: "Connect",
+    selectDeviceTypeAndName: "Please select device type and enter device name",
+    deviceConnected: "Device connected successfully!",
+    deviceConnectFailed: "Failed to connect device. Please try again.",
+    nutritionSubtitle: "Log meals and monitor calories.",
+    foodItem: "Food item",
+    foodItemExample: "e.g. Banana",
+    calories: "Calories",
+    addFood: "Add",
+    dailySummary: "Daily summary",
+    noEntriesYet: "No entries yet",
+    complaintSubtitle: "Let us know what's wrong.",
+    yourMessage: "Your message",
+    submit: "Submit",
+    previousSubmissions: "Previous submissions",
+    noSubmissionsYet: "You haven't submitted anything yet.",
+    addReminderDialog: "Add reminder dialog (demo)",
+    foodAddedDemo: "Food item added (demo)",
   },
   kz: {
     welcome: "Қош келдіңіз",
@@ -122,6 +160,16 @@ const translations = {
     manageDevices: "Құрылғыларды басқарыңыз",
     noReminders: "Еске салғыштар жоқ",
     noDevices: "Құрылғылар қосылмаған",
+    noData: "Деректер жоқ",
+    vitalsSubtitle: "Денеңіздің жағдайын уақыт өте келе қадағалаңыз.",
+    recentReadings: "Жуықтағы көрсеткіштер",
+    date: "Күн",
+    type: "Тип",
+    value: "Мән",
+    noReadingsAvailable: "Көрсеткіштер жоқ",
+    reportsSubtitle: "Қысқаша есеп пен экспортты жүктеп алыңыз.",
+    noReportsGenerated: "Есептер жоқ",
+    noComplaintsFound: "Шағымдар табылмады.",
     history: "Тарих",
     noSymptomsLogged: "Симптомдар сақталмады.",
     heartRate: "Жүрек соғысы",
@@ -134,6 +182,34 @@ const translations = {
     breathing: "Тыныс",
     symptomFocus: "Симптом енгізу",
     symptomExample: "мысалы: бас ауруы, ауыру, жөтел",
+    reminderSubtitle: "Жоспарланған еске салғыштарды орындаңыз.",
+    addReminder: "+ Еске салғыш қосу",
+    noRemindersYet: "Еске салғыштар жоқ. Жоғарыдан қосыңыз.",
+    deviceSubtitle: "Смарт-сағат пен трекерлерді жалғаңыз.",
+    connectDevice: "Құрылғыны қосу",
+    connectNewDevice: "Жаңа құрылғыны қосу",
+    deviceType: "Құрылғы түрі",
+    deviceName: "Құрылғының атауы",
+    deviceNameExample: "мысалы: Менің Fitbit Charge 5",
+    cancel: "Бас тарту",
+    connect: "Қосу",
+    selectDeviceTypeAndName: "Құрылғы түрін таңдаңыз және атын жазыңыз",
+    deviceConnected: "Құрылғы сәтті қосылды!",
+    deviceConnectFailed: "Құрылғыны қосу сәтсіз. Қайтадан көріңіз.",
+    nutritionSubtitle: "Тамақтарды енгізіп, калорияны бақылаңыз.",
+    foodItem: "Тағам атауы",
+    foodItemExample: "мысалы: Банан",
+    calories: "Калория",
+    addFood: "Қосу",
+    dailySummary: "Күндік қорытынды",
+    noEntriesYet: "Элементтер жоқ",
+    complaintSubtitle: "Не дұрыс емес екенін айтыңыз.",
+    yourMessage: "Хабарламаңыз",
+    submit: "Жіберу",
+    previousSubmissions: "Алдыңғы жіберілгендер",
+    noSubmissionsYet: "Сіз әлі ештеңе жібермедіңіз.",
+    addReminderDialog: "Еске салғыш диалогы (демо)",
+    foodAddedDemo: "Тағам элементі қосылды (демо)",
   },
   ru: {
     welcome: "Добро пожаловать",
@@ -171,6 +247,16 @@ const translations = {
     manageDevices: "Управляйте устройствами",
     noReminders: "Нет напоминаний",
     noDevices: "Устройства не подключены",
+    noData: "Нет данных",
+    vitalsSubtitle: "Узнайте, как работает ваш организм с течением времени.",
+    recentReadings: "Последние показания",
+    date: "Дата",
+    type: "Тип",
+    value: "Значение",
+    noReadingsAvailable: "Нет показаний",
+    reportsSubtitle: "Скачайте сводки и экспортируйте данные.",
+    noReportsGenerated: "Отчётов нет",
+    noComplaintsFound: "Жалоб не найдено.",
     history: "История",
     noSymptomsLogged: "Симптомы не зарегистрированы.",
     heartRate: "Пульс",
@@ -183,6 +269,34 @@ const translations = {
     breathing: "Дыхание",
     symptomFocus: "Поле симптомов",
     symptomExample: "например: головная боль, слабость, кашель",
+    reminderSubtitle: "Следите за запланированными уведомлениями.",
+    addReminder: "+ Добавить напоминание",
+    noRemindersYet: "Напоминаний нет. Добавьте сверху.",
+    deviceSubtitle: "Подключите умные часы и трекеры.",
+    connectDevice: "Подключить устройство",
+    connectNewDevice: "Подключить новое устройство",
+    deviceType: "Тип устройства",
+    deviceName: "Название устройства",
+    deviceNameExample: "например: Мой Fitbit Charge 5",
+    cancel: "Отмена",
+    connect: "Подключить",
+    selectDeviceTypeAndName: "Пожалуйста, выберите тип устройства и введите название",
+    deviceConnected: "Устройство успешно подключено!",
+    deviceConnectFailed: "Не удалось подключить устройство. Попробуйте снова.",
+    nutritionSubtitle: "Записывайте питание и контролируйте калории.",
+    foodItem: "Блюдо",
+    foodItemExample: "например: Банан",
+    calories: "Калории",
+    addFood: "Добавить",
+    dailySummary: "Ежедневный отчет",
+    noEntriesYet: "Нет записей",
+    complaintSubtitle: "Расскажите нам, что не так.",
+    yourMessage: "Ваше сообщение",
+    submit: "Отправить",
+    previousSubmissions: "Предыдущие отправки",
+    noSubmissionsYet: "Вы ещё ничего не отправили.",
+    addReminderDialog: "Диалог добавления напоминания (демо)",
+    foodAddedDemo: "Блюдо добавлено (демо)",
   },
 };
 function t(key) {
@@ -1066,10 +1180,10 @@ function attachSymptomsHandlers() {
 
 function renderReminders() {
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("reminders")}</h2><p class="subtitle">Stay on track with scheduled alerts.</p></div>
+      <div class="page-header"><h2>${t("reminders")}</h2><p class="subtitle">${t("reminderSubtitle")}</p></div>
       <div class="card">
-        <button class="btn primary" onclick="openAddReminder()">+ Add reminder</button>
-        <div id="reminders-list" class="empty-state">No reminders yet. Click above to add one.</div>
+        <button class="btn primary" onclick="openAddReminder()">${t("addReminder")}</button>
+        <div id="reminders-list" class="empty-state">${t("noRemindersYet")}</div>
       </div>
     </main>${renderFooter()}`;
 }
@@ -1078,10 +1192,10 @@ function attachRemindersHandlers() {}
 
 function renderDevices() {
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("devices")}</h2><p class="subtitle">Link smart watches and trackers for live data.</p></div>
+      <div class="page-header"><h2>${t("devices")}</h2><p class="subtitle">${t("deviceSubtitle")}</p></div>
       <div class="card">
-        <button class="btn primary" onclick="connectDevice()">Connect new device</button>
-        <div id="devices-list" class="empty-state">No devices connected.</div>
+        <button class="btn primary" onclick="connectDevice()">${t("connectDevice")}</button>
+        <div id="devices-list" class="empty-state">${t("noDevices")}</div>
       </div>
     </main>${renderFooter()}`;
 }
@@ -1092,19 +1206,19 @@ function attachDevicesHandlers() {
 
 function renderVitals() {
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("vitals")}</h2><p class="subtitle">Learn how your body is doing over time.</p></div>
+      <div class="page-header"><h2>${t("vitals")}</h2><p class="subtitle">${t("vitalsSubtitle")}</p></div>
       <div class="stats-grid" id="vitals-grid">
         <!-- placeholders for charts -->
-        <div class="stat">${t("heartRate")}<br><div class="empty-chart">No data</div></div>
-        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">No data</div></div>
-        <div class="stat">${t("oxygen")}<br><div class="empty-chart">No data</div></div>
-        <div class="stat">${t("temperature")}<br><div class="empty-chart">No data</div></div>
+        <div class="stat">${t("heartRate")}<br><div class="empty-chart">${t("noData")}</div></div>
+        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">${t("noData")}</div></div>
+        <div class="stat">${t("oxygen")}<br><div class="empty-chart">${t("noData")}</div></div>
+        <div class="stat">${t("temperature")}<br><div class="empty-chart">${t("noData")}</div></div>
       </div>
       <div class="card" style="margin-top:24px;">
-        <h3>Recent readings</h3>
+        <h3>${t("recentReadings")}</h3>
         <table style="width:100%; border-collapse:collapse;">
-          <thead><tr><th>Date</th><th>Type</th><th>Value</th></tr></thead>
-          <tbody id="vitals-table"><tr><td colspan="3" class="empty-state">No readings available</td></tr></tbody>
+          <thead><tr><th>${t("date")}</th><th>${t("type")}</th><th>${t("value")}</th></tr></thead>
+          <tbody id="vitals-table"><tr><td colspan="3" class="empty-state">${t("noReadingsAvailable")}</td></tr></tbody>
         </table>
       </div>
     </main>${renderFooter()}`;
@@ -1112,33 +1226,33 @@ function renderVitals() {
 
 function renderNutrition() {
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("nutrition")}</h2><p class="subtitle">Log meals and monitor calories.</p></div>
+      <div class="page-header"><h2>${t("nutrition")}</h2><p class="subtitle">${t("nutritionSubtitle")}</p></div>
       <div class="card">
         <form id="nutrition-form" class="modal-form">
           <div class="form-group">
-            <label>Food item</label>
-            <input type="text" id="food-name" placeholder="e.g. Banana" required>
+            <label>${t("foodItem")}</label>
+            <input type="text" id="food-name" placeholder="${t("foodItemExample")}" required>
           </div>
           <div class="form-group">
-            <label>Calories</label>
+            <label>${t("calories")}</label>
             <input type="number" id="food-cal" placeholder="200" required>
           </div>
-          <button class="btn primary" onclick="addFood(event)">Add</button>
+          <button class="btn primary" onclick="addFood(event)">${t("addFood")}</button>
         </form>
       </div>
       <div class="card">
-        <h3>Daily summary</h3>
-        <div id="nutrition-chart" class="empty-chart">No entries yet</div>
+        <h3>${t("dailySummary")}</h3>
+        <div id="nutrition-chart" class="empty-chart">${t("noEntriesYet")}</div>
       </div>
     </main>${renderFooter()}`;
 }
 
 function renderReports() {
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("reports")}</h2><p class="subtitle">Download summaries and export data.</p></div>
+      <div class="page-header"><h2>${t("reports")}</h2><p class="subtitle">${t("reportsSubtitle")}</p></div>
       <div class="card">
         <ul id="reports-list" style="list-style:none; padding:0;">
-          <li class="empty-state">No reports generated</li>
+          <li class="empty-state">${t("noReportsGenerated")}</li>
         </ul>
       </div>
     </main>${renderFooter()}`;
@@ -1147,19 +1261,19 @@ function renderReports() {
 function renderComplaints() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
-      <div class="page-header"><h2>${t("complaints")}</h2><p class="subtitle">Let us know what's wrong.</p></div>
+      <div class="page-header"><h2>${t("complaints")}</h2><p class="subtitle">${t("complaintSubtitle")}</p></div>
       <div class="card">
         <form id="complaint-form" class="modal-form">
           <div class="form-group">
-            <label>Your message</label>
+            <label>${t("yourMessage")}</label>
             <textarea id="complaint-text" required></textarea>
           </div>
-          <button class="btn primary" onclick="submitComplaint(event)">Submit</button>
+          <button class="btn primary" onclick="submitComplaint(event)">${t("submit")}</button>
         </form>
       </div>
       <div class="card">
-        <h3>Previous submissions</h3>
-        <div id="complaints-history" class="empty-state">You haven't submitted anything yet.</div>
+        <h3>${t("previousSubmissions")}</h3>
+        <div id="complaints-history" class="empty-state">${t("noSubmissionsYet")}</div>
       </div>
     </main>
 `;
@@ -1174,7 +1288,7 @@ async function loadComplaints() {
     const complaints = await apiCall("/complaints", "GET");
     const listDiv = document.getElementById("complaints-list");
     if (complaints.length === 0) {
-      listDiv.innerHTML = "<p>No complaints found.</p>";
+      listDiv.innerHTML = `<p>${t("noComplaintsFound")}</p>`;
       return;
     }
     let html = "<h3>Your Complaints</h3><ul>";
@@ -1418,7 +1532,7 @@ function submitSymptom(e) {
     });
 }
 function openAddReminder() {
-  alert("Add reminder dialog (demo)");
+  alert(t("addReminderDialog"));
 }
 function connectDevice() {
   // Show device selection modal
@@ -1440,21 +1554,21 @@ function connectDevice() {
   modal.className = "modal-overlay";
   modal.innerHTML = `
     <div class="modal">
-      <h3>Connect New Device</h3>
+      <h3>${t("connectNewDevice")}</h3>
       <form id="device-connect-form">
         <div class="form-group">
-          <label>Device Type</label>
+          <label>${t("deviceType")}</label>
           <select id="device-type" required>
             ${options}
           </select>
         </div>
         <div class="form-group">
-          <label>Device Name</label>
-          <input type="text" id="device-name" placeholder="e.g. My Fitbit Charge 5" required>
+          <label>${t("deviceName")}</label>
+          <input type="text" id="device-name" placeholder="${t("deviceNameExample")}" required>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn primary">Connect</button>
+          <button type="button" class="btn secondary" onclick="closeModal()">${t("cancel")}</button>
+          <button type="submit" class="btn primary">${t("connect")}</button>
         </div>
       </form>
     </div>
@@ -1470,18 +1584,18 @@ function connectDevice() {
       const deviceName = document.getElementById("device-name").value.trim();
 
       if (!deviceType || !deviceName) {
-        alert("Please select device type and enter device name");
+        alert(t("selectDeviceTypeAndName"));
         return;
       }
 
       try {
         await apiCall("/devices/connect", "POST", { deviceType, deviceName });
-        alert("Device connected successfully!");
+        alert(t("deviceConnected"));
         closeModal();
         loadDevices();
       } catch (err) {
         console.error("Connect device failed:", err);
-        alert("Failed to connect device. Please try again.");
+        alert(t("deviceConnectFailed"));
       }
     });
 }
@@ -1558,7 +1672,7 @@ async function loadDevices() {
     const listDiv = document.getElementById("devices-list");
 
     if (!devices || devices.length === 0) {
-      listDiv.innerHTML = "No devices connected.";
+      listDiv.innerHTML = t("noDevices");
       return;
     }
 
@@ -1643,7 +1757,7 @@ function viewFullAnalysis(symptom) {
 }
 function addFood(e) {
   e.preventDefault();
-  alert("Food item added (demo)");
+  alert(t("foodAddedDemo"));
 }
 function saveProfile(e) {
   e.preventDefault();
@@ -1674,7 +1788,7 @@ async function loadComplaintsHistory() {
     const complaints = await apiCall("/complaints", "GET");
     const historyDiv = document.getElementById("complaints-history");
     if (!complaints || complaints.length === 0) {
-      historyDiv.innerHTML = "You haven't submitted anything yet.";
+      historyDiv.innerHTML = t("noSubmissionsYet");
       return;
     }
 
