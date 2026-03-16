@@ -488,7 +488,7 @@ function renderPatientDashboard() {
 
       <section class="row cards-row">
         <div class="card wide">
-          <h4>Health Metrics</h4>
+          <h4>${t("healthMetrics")}</h4>
           <div class="metrics-list">
             <div class="metric"> <div class="metric-icon">💓</div>
               <div class="metric-label">Heart Rate</div>
@@ -649,12 +649,13 @@ function attachPatientDashboardHandlers() {
         }
 
         // Urgency alert with enhanced styling
-        if (urgency === "URGENT") {
+        const urgencyText = typeof urgency === 'string' ? urgency : "";
+        if (urgencyText === "URGENT") {
           html += `<div style="color:#fff; background-color:#d32f2f; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #b71c1c;">⚠️ URGENT ALERT: Call 911 immediately - This requires emergency medical attention!</div>`;
-        } else if (urgency.includes("ER") || urgency.includes("Emergency")) {
-          html += `<div style="color:#fff; background-color:#f57c00; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #e65100;">🚨 Emergency Alert: ${result.urgency} - Seek emergency care immediately!</div>`;
-        } else if (urgency.includes("Consult") || urgency.includes("See")) {
-          html += `<div style="color:#d32f2f; background-color:#ffebee; padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid #d32f2f;"><strong>⏱️ Recommended Action:</strong> ${result.urgency}</div>`;
+        } else if (urgencyText.includes("ER") || urgencyText.includes("Emergency")) {
+          html += `<div style="color:#fff; background-color:#f57c00; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #e65100;">🚨 Emergency Alert: ${urgencyText} - Seek emergency care immediately!</div>`;
+        } else if (urgencyText.includes("Consult") || urgencyText.includes("See")) {
+          html += `<div style="color:#d32f2f; background-color:#ffebee; padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid #d32f2f;"><strong>⏱️ Recommended Action:</strong> ${urgencyText}</div>`;
         }
 
         // Severity with visual indicator
@@ -1220,8 +1221,23 @@ function attachProfileHandlers() {
     // Load user profile data first
     (async () => {
       try {
-        const userData = await apiCall(`/auth/${currentUser.id}`, "GET");
+        let userData;
+        try {
+          userData = await apiCall(`/auth/${currentUser.id}`, "GET");
+        } catch (innerErr) {
+          // If direct user fetch fails, try authenticated /auth/profile fallback
+          if (
+            innerErr.message.includes("404") ||
+            innerErr.message.includes("not found")
+          ) {
+            userData = await apiCall(`/auth/profile`, "GET");
+          } else {
+            throw innerErr;
+          }
+        }
+
         currentUser = userData;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
         // Re-render to show the loaded data
         render();
       } catch (err) {

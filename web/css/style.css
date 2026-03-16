@@ -82,15 +82,22 @@ body {
 [data-theme="dark"] .btn {
   color: #fff;
 }
+[data-theme="dark"] .analysis-modal,
 [data-theme="dark"] .analysis-content {
   background: #1e1e2f;
   color: #e9efff;
 }
 [data-theme="dark"] .ai-response,
 [data-theme="dark"] .analysis-section,
-[data-theme="dark"] .analysis-disclaimer {
+[data-theme="dark"] .analysis-disclaimer,
+[data-theme="dark"] .symptom-text {
   background: #262a45;
   color: #e9ebff;
+}
+[data-theme="dark"] #analysis-result {
+  background: #1e253f;
+  color: #f8f9ff;
+  border: 1px solid #3a416c;
 }
 body.auth-page {
   margin: 0 !important;
