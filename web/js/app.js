@@ -218,9 +218,10 @@ const storedTheme = localStorage.getItem("theme");
 const initialTheme =
   storedTheme === "dark" || storedTheme === "light"
     ? storedTheme
-    : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+    : window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
 applyTheme(initialTheme);
 
 // Restore currentUser from localStorage
@@ -401,7 +402,9 @@ function attachLoginHandlers() {
       navigate("dashboard");
     } catch (err) {
       console.error("Login failed:", err);
-      alert("Login failed: " + (err.message || "Please check your credentials"));
+      alert(
+        "Login failed: " + (err.message || "Please check your credentials"),
+      );
     }
   });
 }
@@ -484,7 +487,9 @@ function attachRegisterHandlers() {
         navigate("dashboard");
       } catch (err) {
         console.error("Registration failed:", err);
-        alert("Registration failed: " + (err.message || "Could not create account"));
+        alert(
+          "Registration failed: " + (err.message || "Could not create account"),
+        );
       }
     });
 }
