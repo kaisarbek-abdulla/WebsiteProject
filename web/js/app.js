@@ -2048,7 +2048,10 @@ async function validateSession() {
       "user:",
       currentUser.id,
     );
-    currentPage = restorePage === "login" || restorePage === "register" ? "dashboard" : restorePage;
+    currentPage =
+      restorePage === "login" || restorePage === "register"
+        ? "dashboard"
+        : restorePage;
     render();
     return;
   }
