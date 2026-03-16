@@ -1398,16 +1398,18 @@ function connectDevice() {
 }
 
 function showSymptomAnalysis(result) {
-  const safeResult = result || {};
-  const analysis =
-    safeResult.aiAnalysis ||
-    safeResult.analysis ||
-    safeResult.text ||
-    "No analysis available.";
+  const safeResult = result && typeof result === 'object' ? result : {};
+  let analysis = safeResult.aiAnalysis || safeResult.analysis || safeResult.text || "No analysis available.";
+  if (typeof analysis !== 'string') analysis = String(analysis || "No analysis available.");
+  // Defensive: only call replace if analysis is a string
+  let analysisHtml = analysis;
+  if (typeof analysisHtml === 'string' && analysisHtml.replace) {
+    analysisHtml = analysisHtml.replace(/\n/g, "<br>");
+  }
   const parsedSymptoms = Array.isArray(safeResult.parsedSymptoms)
     ? safeResult.parsedSymptoms
     : [];
-  const severity = safeResult.severity || "unknown";
+  const severity = typeof safeResult.severity === 'string' ? safeResult.severity : "unknown";
   const scoreClass =
     severity && severity !== "unknown"
       ? `severity-${severity}`
@@ -1421,11 +1423,11 @@ function showSymptomAnalysis(result) {
       <div class="analysis-content">
         <div class="analysis-section">
           <h4>${t("yourSymptoms")}</h4>
-          <p class="symptom-text">"${safeResult.text || "-"}"</p>
+          <p class="symptom-text">"${typeof safeResult.text === 'string' ? safeResult.text : "-"}"</p>
         </div>
         <div class="analysis-section">
           <h4>${t("aiAnalysis")}</h4>
-          <div class="ai-response">${analysis.replace(/\n/g, "<br>")}</div>
+          <div class="ai-response">${analysisHtml}</div>
         </div>
         <div class="analysis-section">
           <h4>${t("detectedSymptoms")}</h4>
