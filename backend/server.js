@@ -37,12 +37,14 @@ const symptomsRouter = require('./routes/symptoms');
 const remindersRouter = require('./routes/reminders');
 const complaintsRouter = require('./routes/complaints');
 const devicesRouter = require('./routes/devices');
+const messagesRouter = require('./routes/messages');
 
 app.use('/api/auth', authRouter);
 app.use('/api/symptoms', symptomsRouter);
 app.use('/api/reminders', remindersRouter);
 app.use('/api/complaints', complaintsRouter);
 app.use('/api/devices', devicesRouter);
+app.use('/api/messages', messagesRouter);
 
 // Start background workers
 try {

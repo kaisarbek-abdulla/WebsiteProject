@@ -28,6 +28,107 @@ if ("serviceWorker" in navigator) {
 
 let currentUser = null;
 let authToken = localStorage.getItem("authToken") || null;
+
+// ===== Demo sims (Vitals + Nutrition helpers) =====
+// These are UI sims for the expo so the site feels alive even without devices/APIs.
+const VITALS_SIM = {
+  paused: false,
+  heartRate: 76,
+  steps: 512,
+  goalSteps: 1000,
+  wave: [0.55, 0.6, 0.52, 0.66, 0.58, 0.62],
+};
+let vitalsSimTimer = null;
+
+function ensureVitalsSim() {
+  if (vitalsSimTimer) return;
+  vitalsSimTimer = window.setInterval(() => {
+    if (VITALS_SIM.paused) return;
+
+    const drift = Math.floor(Math.random() * 5) - 2; // -2..+2
+    VITALS_SIM.heartRate = clamp(VITALS_SIM.heartRate + drift, 58, 122);
+
+    const burst = Math.random() < 0.12 ? Math.floor(Math.random() * 22) : Math.floor(Math.random() * 7);
+    VITALS_SIM.steps += burst;
+
+    const normalized = (VITALS_SIM.heartRate - 58) / (122 - 58);
+    const noise = (Math.random() - 0.5) * 0.18;
+    VITALS_SIM.wave.push(clamp(normalized + noise, 0.05, 0.95));
+    if (VITALS_SIM.wave.length > 54) VITALS_SIM.wave.shift();
+
+    renderVitalsSimToDom();
+  }, 900);
+}
+
+function toggleVitalsSim() {
+  VITALS_SIM.paused = !VITALS_SIM.paused;
+  renderVitalsSimToDom();
+}
+
+function renderVitalsSimToDom() {
+  // Dashboard tiles
+  const hrMetric = document.getElementById("sim-hr-metric");
+  if (hrMetric) hrMetric.textContent = `${VITALS_SIM.heartRate} BPM`;
+  const stepsMetric = document.getElementById("sim-steps-metric");
+  if (stepsMetric) stepsMetric.textContent = `${VITALS_SIM.steps}`;
+
+  // Vitals page
+  const hrText = document.getElementById("sim-hr");
+  if (hrText) hrText.textContent = `${VITALS_SIM.heartRate}`;
+  const stepsText = document.getElementById("sim-steps");
+  if (stepsText) stepsText.textContent = `${VITALS_SIM.steps}`;
+
+  // Derived quick stats (demo only)
+  const kcalEl = document.getElementById("sim-kcal");
+  const minsEl = document.getElementById("sim-mins");
+  const kmEl = document.getElementById("sim-km");
+  if (kcalEl || minsEl || kmEl) {
+    const kcal = 650 + Math.floor(VITALS_SIM.steps * 0.25);
+    const activeMinutes = Math.max(0, Math.floor(VITALS_SIM.steps / 36));
+    const km = (VITALS_SIM.steps * 0.00067).toFixed(2);
+    if (kcalEl) kcalEl.textContent = String(kcal);
+    if (minsEl) minsEl.textContent = `${activeMinutes}:${String(VITALS_SIM.steps % 60).padStart(2, "0")}`;
+    if (kmEl) kmEl.textContent = String(km);
+  }
+
+  const hrRing = document.getElementById("sim-hr-ring");
+  if (hrRing) {
+    const p = clamp((VITALS_SIM.heartRate - 55) / (125 - 55), 0, 1);
+    hrRing.style.setProperty("--p", `${Math.round(p * 100)}%`);
+  }
+  const stepsRing = document.getElementById("sim-steps-ring");
+  if (stepsRing) {
+    const p = clamp(VITALS_SIM.steps / VITALS_SIM.goalSteps, 0, 1);
+    stepsRing.style.setProperty("--p", `${Math.round(p * 100)}%`);
+  }
+
+  const pauseBtn = document.getElementById("sim-pause-btn");
+  if (pauseBtn) pauseBtn.textContent = VITALS_SIM.paused ? "Resume" : "Pause";
+
+  const wavePath = document.getElementById("sim-wave-path");
+  if (wavePath) {
+    const d = waveToPath(VITALS_SIM.wave, 260, 70);
+    wavePath.setAttribute("d", d);
+  }
+}
+
+function waveToPath(samples, w, h) {
+  if (!samples || samples.length === 0) return "";
+  const n = samples.length;
+  let d = "";
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1);
+    const x = t * w;
+    const y = (1 - clamp(samples[i], 0, 1)) * h;
+    d += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+  }
+  return d.trim();
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
 // language support
 let currentLang =
   localStorage.getItem("lang") ||
@@ -513,6 +614,7 @@ function render() {
       break;
     case "nutrition":
       root.innerHTML = renderNutrition();
+      attachNutritionHandlers();
       break;
     case "reports":
       root.innerHTML = renderReports();
@@ -749,7 +851,7 @@ function renderPatientDashboard() {
           <div class="metrics-list">
             <div class="metric"> <div class="metric-icon">💓</div>
               <div class="metric-label">${t("heartRate")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-hr-metric">—</div>
             </div>
             <div class="metric"> <div class="metric-icon">🩺</div>
               <div class="metric-label">${t("bloodPressure")}</div>
@@ -761,7 +863,7 @@ function renderPatientDashboard() {
             </div>
             <div class="metric"> <div class="metric-icon">🥾</div>
               <div class="metric-label">${t("steps")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-steps-metric">—</div>
             </div>
             <div class="metric"> <div class="metric-icon">⚖️</div>
               <div class="metric-label">${t("weight")}</div>
@@ -788,6 +890,24 @@ function renderPatientDashboard() {
           <div class="empty-state">⌚ ${t("noDevices")}</div>
         </div>
       </section>
+
+      <section class="row">
+        <div class="card wide">
+          <h4>Doctor help</h4>
+          <p class="muted">Find a doctor and send a message.</p>
+          <div class="doctor-help-bar">
+            <select id="doctor-select" class="doctor-select">
+              <option value="">Loading doctors...</option>
+            </select>
+            <button class="btn primary" id="open-doctor-chat" type="button">Open chat</button>
+          </div>
+          <div id="patient-chat-thread" class="chat-thread empty-state" style="margin-top:12px;">Select a doctor to view messages.</div>
+          <form id="patient-chat-form" class="chat-form">
+            <input id="patient-chat-text" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button class="btn primary" type="submit">Send</button>
+          </form>
+        </div>
+      </section>
     </main>
 
     ${renderFooter()}
@@ -797,10 +917,34 @@ function renderPatientDashboard() {
 function renderDoctorDashboard() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
-      <div class="card">
+      <div class="page-header">
         <h2>Doctor Dashboard</h2>
-        <p>View and manage your patients.</p>
-        <div id="patients-list"></div>
+        <p class="subtitle">Patients and messaging</p>
+      </div>
+
+      <div class="doctor-layout">
+        <div class="card doctor-panel">
+          <div class="panel-head">
+            <h3 style="margin:0;">Patients</h3>
+            <button class="btn small" id="refresh-patients-btn" type="button">Refresh</button>
+          </div>
+          <div id="patients-list" class="list"></div>
+        </div>
+
+        <div class="card doctor-panel">
+          <div class="panel-head">
+            <div>
+              <h3 id="chat-title" style="margin:0;">Messages</h3>
+              <div class="muted" id="chat-sub">Select a patient to start chatting.</div>
+            </div>
+          </div>
+          <div id="chat-thread" class="chat-thread empty-state">No conversation selected.</div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-text" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button class="btn primary" type="submit">Send</button>
+            <button class="btn" type="button" id="recommend-btn">Recommend yourself</button>
+          </form>
+        </div>
       </div>
     </main>${renderFooter()}`;
 }
@@ -849,6 +993,10 @@ function attachPatientDashboardHandlers() {
   const analyzeBtn = document.getElementById("analyze-btn");
   const symptomInput = document.getElementById("symptom-input");
   const resultDiv = document.getElementById("analysis-result");
+
+  // Ensure vitals numbers look alive on the dashboard.
+  ensureVitalsSim();
+  renderVitalsSimToDom();
 
   if (analyzeBtn) {
     analyzeBtn.addEventListener("click", async () => {
@@ -1021,10 +1169,86 @@ function attachPatientDashboardHandlers() {
       navigate("vitals");
     });
   }
+
+  attachPatientDoctorHelpHandlers();
+}
+
+function attachPatientDoctorHelpHandlers() {
+  const select = document.getElementById("doctor-select");
+  const openBtn = document.getElementById("open-doctor-chat");
+  const form = document.getElementById("patient-chat-form");
+  const input = document.getElementById("patient-chat-text");
+
+  if (!select || !openBtn || !form || !input) return;
+
+  loadDoctorsIntoSelect(select).catch(() => {
+    select.innerHTML = `<option value="">Failed to load doctors</option>`;
+  });
+
+  openBtn.addEventListener("click", async () => {
+    const id = select.value;
+    const name = select.selectedOptions?.[0]?.textContent || "Doctor";
+    if (!id) return;
+    activeChatUserName = name;
+    await openPatientChatWith(id, name);
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = select.value;
+    if (!id) return;
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    await sendChatMessage(id, text);
+    await refreshPatientChatThread(id, select.selectedOptions?.[0]?.textContent || "Doctor");
+  });
+}
+
+async function loadDoctorsIntoSelect(selectEl) {
+  const doctors = await apiCall("/auth/doctors/all", "GET");
+  if (!Array.isArray(doctors) || doctors.length === 0) {
+    selectEl.innerHTML = `<option value="">No doctors available</option>`;
+    return;
+  }
+  selectEl.innerHTML =
+    `<option value="">Select a doctor...</option>` +
+    doctors
+      .map((d) => `<option value="${d.id}">${escapeHtml(d.name)} (${escapeHtml(d.email)})</option>`)
+      .join("");
+}
+
+async function openPatientChatWith(doctorId, name) {
+  await refreshPatientChatThread(doctorId, name);
+}
+
+async function refreshPatientChatThread(doctorId, doctorName) {
+  const thread = document.getElementById("patient-chat-thread");
+  if (!thread) return;
+  if (!doctorId) {
+    thread.classList.add("empty-state");
+    thread.textContent = "Select a doctor to view messages.";
+    return;
+  }
+  try {
+    const msgs = await apiCall(`/messages/with/${doctorId}`, "GET");
+    thread.classList.remove("empty-state");
+    activeChatUserName = doctorName;
+    thread.innerHTML = renderChatMessages(msgs, doctorId);
+    thread.scrollTop = thread.scrollHeight;
+  } catch (e) {
+    thread.classList.add("empty-state");
+    thread.textContent = "Failed to load messages.";
+  }
 }
 
 function attachDoctorDashboardHandlers() {
   loadPatients();
+
+  const refreshBtn = document.getElementById("refresh-patients-btn");
+  if (refreshBtn) refreshBtn.addEventListener("click", () => loadPatients());
+
+  wireChatUI();
 }
 
 async function loadPatients() {
@@ -1032,18 +1256,120 @@ async function loadPatients() {
     const patients = await apiCall("/auth/patients/all", "GET");
     const listDiv = document.getElementById("patients-list");
     if (patients.length === 0) {
-      listDiv.innerHTML = "<p>No patients found.</p>";
+      listDiv.innerHTML = '<div class="empty-state">No patients found.</div>';
       return;
     }
-    let html = "<h3>Patients</h3><ul>";
+    let html = '<div class="list">';
     patients.forEach((p) => {
-      html += `<li><strong>${p.name}</strong> (${p.email}) - Age: ${p.profile.age || "N/A"}, Height: ${p.profile.height || "N/A"}, Weight: ${p.profile.weight || "N/A"}</li>`;
+      const age = p.profile?.age || "N/A";
+      const h = p.profile?.height || "N/A";
+      const w = p.profile?.weight || "N/A";
+      html += `
+        <button class="list-item" type="button" data-chat-user="${p.id}" data-chat-name="${escapeHtml(p.name)}">
+          <div class="li-title">${escapeHtml(p.name)}</div>
+          <div class="li-sub">${escapeHtml(p.email)} • Age ${age} • H ${h} • W ${w}</div>
+        </button>
+      `;
     });
-    html += "</ul>";
+    html += "</div>";
     listDiv.innerHTML = html;
+
+    listDiv.querySelectorAll("[data-chat-user]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-chat-user");
+        const name = btn.getAttribute("data-chat-name") || "Patient";
+        await openChatWith(id, name);
+      });
+    });
   } catch (err) {
     console.error("Load patients failed:", err);
   }
+}
+
+let activeChatUserId = null;
+let activeChatUserName = null;
+
+function wireChatUI() {
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-text");
+  const recommendBtn = document.getElementById("recommend-btn");
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!activeChatUserId) return;
+      const text = (input?.value || "").trim();
+      if (!text) return;
+      if (input) input.value = "";
+      await sendChatMessage(activeChatUserId, text);
+      await refreshChatThread();
+    });
+  }
+
+  if (recommendBtn) {
+    recommendBtn.addEventListener("click", async () => {
+      if (!activeChatUserId) return;
+      const name = currentUser?.name || "Doctor";
+      const text = `Hello, I'm Dr. ${name}. I can help review your symptoms and suggest next steps.`;
+      await sendChatMessage(activeChatUserId, text);
+      await refreshChatThread();
+    });
+  }
+}
+
+async function openChatWith(userId, name) {
+  activeChatUserId = userId;
+  activeChatUserName = name;
+  const title = document.getElementById("chat-title");
+  const sub = document.getElementById("chat-sub");
+  if (title) title.textContent = `Chat with ${name}`;
+  if (sub) sub.textContent = "Messages are stored on the server (demo).";
+  await refreshChatThread();
+}
+
+async function refreshChatThread() {
+  const thread = document.getElementById("chat-thread");
+  if (!thread) return;
+  if (!activeChatUserId) {
+    thread.classList.add("empty-state");
+    thread.textContent = "No conversation selected.";
+    return;
+  }
+  try {
+    const msgs = await apiCall(`/messages/with/${activeChatUserId}`, "GET");
+    thread.classList.remove("empty-state");
+    thread.innerHTML = renderChatMessages(msgs, activeChatUserId);
+    thread.scrollTop = thread.scrollHeight;
+  } catch (e) {
+    thread.classList.add("empty-state");
+    thread.textContent = "Failed to load messages.";
+  }
+}
+
+async function sendChatMessage(toUserId, text) {
+  try {
+    await apiCall("/messages", "POST", { toUserId, text });
+  } catch (e) {
+    alert("Failed to send message.");
+  }
+}
+
+function renderChatMessages(msgs, otherId) {
+  if (!Array.isArray(msgs) || msgs.length === 0) {
+    return '<div class="empty-state">No messages yet. Say hi.</div>';
+  }
+  return msgs
+    .map((m) => {
+      const mine = m.fromUserId === currentUser?.id;
+      const cls = mine ? "chat-bubble mine" : "chat-bubble";
+      const who = mine ? "You" : (activeChatUserName || "User");
+      const time = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      return `<div class="${cls}">
+        <div class="chat-meta">${escapeHtml(who)} • ${escapeHtml(time)}</div>
+        <div class="chat-text">${escapeHtml(m.text || "")}</div>
+      </div>`;
+    })
+    .join("");
 }
 
 function attachAdminDashboardHandlers() {
@@ -1327,13 +1653,69 @@ function renderVitals() {
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("vitals")}</h2><p class="subtitle">${t("vitalsSubtitle")}</p></div>
       <div class="card">
-        <button id="refresh-vitals" class="btn primary">${t("refreshVitals")}</button>
+        <div class="vitals-actions">
+          <button id="refresh-vitals" class="btn primary">${t("refreshVitals")}</button>
+          <button id="sim-pause-btn" class="btn" type="button">Pause</button>
+        </div>
       </div>
+
+      <div class="vitals-sim-grid">
+        <div class="card vitals-sim-card">
+          <div class="vitals-sim-header">
+            <div>
+              <div class="vitals-sim-title">Measuring Heart Rate</div>
+              <div class="vitals-sim-sub">${t("heartRate")}</div>
+            </div>
+            <button class="icon-btn" type="button" aria-label="Info">i</button>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring" id="sim-hr-ring" style="--p: 55%">
+              <div class="ring-center">
+                <div class="ring-icon">💓</div>
+                <div class="ring-value"><span id="sim-hr">76</span></div>
+                <div class="ring-unit">BPM</div>
+              </div>
+            </div>
+          </div>
+          <div class="wave-wrap" aria-hidden="true">
+            <svg width="260" height="70" viewBox="0 0 260 70">
+              <path id="sim-wave-path" d="" fill="none" stroke="rgba(43,103,255,0.9)" stroke-width="2.5" stroke-linecap="round"></path>
+            </svg>
+          </div>
+          <div class="muted" style="margin-top:8px;">${t("refreshingVitals").replace("...", "")} (simulation)</div>
+        </div>
+
+        <div class="card vitals-sim-card">
+          <div class="vitals-sim-header">
+            <div>
+              <div class="vitals-sim-title">Pedometer Monitor</div>
+              <div class="vitals-sim-sub">${t("steps")}</div>
+            </div>
+            <button class="icon-btn" type="button" aria-label="Refresh">⟳</button>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring" id="sim-steps-ring" style="--p: 45%">
+              <div class="ring-center">
+                <div class="ring-icon">👣</div>
+                <div class="ring-value"><span id="sim-steps">512</span></div>
+                <div class="ring-unit">Steps</div>
+              </div>
+            </div>
+          </div>
+          <div class="pill">Goal: 1000 steps</div>
+          <div class="vitals-mini-stats">
+            <div class="mini-stat"><div class="mini-ic">🔥</div><div class="mini-v" id="sim-kcal">780</div><div class="mini-l">Kcal</div></div>
+            <div class="mini-stat"><div class="mini-ic">⏱</div><div class="mini-v" id="sim-mins">14:08</div><div class="mini-l">Mins</div></div>
+            <div class="mini-stat"><div class="mini-ic">📍</div><div class="mini-v" id="sim-km">0.34</div><div class="mini-l">Km</div></div>
+          </div>
+        </div>
+      </div>
+
       <div class="stats-grid" id="vitals-grid">
-        <div class="stat">${t("heartRate")}<br><div class="empty-chart">${t("noData")}</div></div>
         <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">${t("noData")}</div></div>
         <div class="stat">${t("oxygen")}<br><div class="empty-chart">${t("noData")}</div></div>
         <div class="stat">${t("temperature")}<br><div class="empty-chart">${t("noData")}</div></div>
+        <div class="stat">${t("weight")}<br><div class="empty-chart">${t("noData")}</div></div>
       </div>
       <div class="card" style="margin-top:24px;">
         <h3>${t("recentReadings")}</h3>
@@ -1353,39 +1735,172 @@ function attachVitalsHandlers() {
       render();
     });
   }
+
+  const pauseBtn = document.getElementById("sim-pause-btn");
+  if (pauseBtn) pauseBtn.addEventListener("click", toggleVitalsSim);
+
+  ensureVitalsSim();
+  renderVitalsSimToDom();
 }
 
 function renderNutrition() {
-  const items = JSON.parse(localStorage.getItem("nutritionEntries") || "[]");
-  const total = items.reduce((sum, item) => sum + (item.cal || 0), 0);
+  const items = JSON.parse(localStorage.getItem("nutritionMealsV2") || "[]");
+  const totals = items.reduce(
+    (acc, it) => {
+      acc.kcal += Number(it.kcal || 0);
+      acc.p += Number(it.p || 0);
+      acc.c += Number(it.c || 0);
+      acc.f += Number(it.f || 0);
+      return acc;
+    },
+    { kcal: 0, p: 0, c: 0, f: 0 },
+  );
+
   const listHtml =
     items.length === 0
       ? `<div class="empty-state">${t("noEntriesYet")}</div>`
-      : `<ul style="list-style:none; padding:0;">${items
-          .map((item) => `<li>${item.food} — ${item.cal} kcal</li>`)
-          .join("")}</ul>`;
+      : `<div class="meal-list">${items
+          .map(
+            (it, idx) => `
+              <div class="meal-row">
+                <div class="meal-main">
+                  <div class="meal-title">${escapeHtml(it.name)} <span class="meal-grams">• ${it.grams}g</span></div>
+                  <div class="meal-sub">${Math.round(it.kcal)} kcal  |  P ${Number(it.p).toFixed(1)}g  C ${Number(it.c).toFixed(1)}g  F ${Number(it.f).toFixed(1)}g</div>
+                </div>
+                <button class="icon-btn" type="button" data-remove-meal="${idx}" aria-label="Remove">✕</button>
+              </div>
+            `,
+          )
+          .join("")}</div>`;
 
   return `${renderHeader()}${renderNav()}<main class="container">
-      <div class="page-header"><h2>${t("nutrition")}</h2><p class="subtitle">${t("nutritionSubtitle")}</p></div>
+      <div class="page-header"><h2>${t("nutrition")}</h2><p class="subtitle">Log meals and estimate macros (protein, carbs, fat).</p></div>
       <div class="card">
         <form id="nutrition-form" class="modal-form">
           <div class="form-group">
-            <label>${t("foodItem")}</label>
-            <input type="text" id="food-name" placeholder="${t("foodItemExample")}" required>
+            <label>Dish name</label>
+            <input type="text" id="food-name" placeholder="e.g. chicken, rice, banana" required>
           </div>
           <div class="form-group">
-            <label>${t("calories")}</label>
-            <input type="number" id="food-cal" placeholder="200" required>
+            <label>Weight (grams)</label>
+            <input type="number" id="food-grams" placeholder="200" value="200" required>
           </div>
           <button class="btn primary" id="add-food-btn">${t("addFood")}</button>
+          <div class="muted" style="margin-top:10px;">Tip: this is a small built-in food list for the expo. We can connect a real nutrition API later.</div>
+          <div id="nutrition-error" class="error-text" style="display:none;"></div>
         </form>
       </div>
       <div class="card">
         <h3>${t("dailySummary")}</h3>
-        <div>${t("totalCalories")}: <strong>${total} kcal</strong></div>
-        <div id="nutrition-list">${listHtml}</div>
+        <div>${t("totalCalories")}: <strong>${Math.round(totals.kcal)} kcal</strong></div>
+        <div class="macro-chips" style="margin-top:10px;">
+          <div class="macro-chip">Protein: <strong>${totals.p.toFixed(1)} g</strong></div>
+          <div class="macro-chip">Carbs: <strong>${totals.c.toFixed(1)} g</strong></div>
+          <div class="macro-chip">Fat: <strong>${totals.f.toFixed(1)} g</strong></div>
+        </div>
+        <div id="nutrition-list" style="margin-top:14px;">${listHtml}</div>
       </div>
     </main>${renderFooter()}`;
+}
+
+function attachNutritionHandlers() {
+  const form = document.getElementById("nutrition-form");
+  if (!form) return;
+  ensureVitalsSim(); // no-op if already running, keeps demo feeling alive
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("food-name")?.value?.trim() || "";
+    const grams = Number(document.getElementById("food-grams")?.value || 0);
+    const errEl = document.getElementById("nutrition-error");
+
+    const food = lookupFood(name);
+    if (!name || !grams || grams <= 0) {
+      showNutritionError(errEl, "Enter a dish name and a valid weight in grams.");
+      return;
+    }
+    if (!food) {
+      showNutritionError(errEl, `Unknown dish. Try: ${Object.keys(FOOD_DB).slice(0, 6).join(", ")}`);
+      return;
+    }
+    if (errEl) errEl.style.display = "none";
+
+    const factor = grams / 100;
+    const entry = {
+      name,
+      grams,
+      kcal: food.kcal * factor,
+      p: food.p * factor,
+      c: food.c * factor,
+      f: food.f * factor,
+      createdAt: new Date().toISOString(),
+    };
+    const items = JSON.parse(localStorage.getItem("nutritionMealsV2") || "[]");
+    items.unshift(entry);
+    localStorage.setItem("nutritionMealsV2", JSON.stringify(items));
+    navigate("nutrition");
+  });
+
+  const list = document.getElementById("nutrition-list");
+  if (list) {
+    list.addEventListener("click", (e) => {
+      const btn = e.target?.closest?.("[data-remove-meal]");
+      if (!btn) return;
+      const idx = Number(btn.getAttribute("data-remove-meal"));
+      const items = JSON.parse(localStorage.getItem("nutritionMealsV2") || "[]");
+      if (idx >= 0 && idx < items.length) {
+        items.splice(idx, 1);
+        localStorage.setItem("nutritionMealsV2", JSON.stringify(items));
+        navigate("nutrition");
+      }
+    });
+  }
+}
+
+function showNutritionError(el, msg) {
+  if (!el) {
+    alert(msg);
+    return;
+  }
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+const FOOD_DB = {
+  // Per 100g (demo list)
+  banana: { kcal: 89, p: 1.1, c: 22.8, f: 0.3 },
+  apple: { kcal: 52, p: 0.3, c: 13.8, f: 0.2 },
+  rice: { kcal: 130, p: 2.7, c: 28.2, f: 0.3 }, // cooked
+  pasta: { kcal: 131, p: 5.0, c: 25.0, f: 1.1 }, // cooked
+  potato: { kcal: 77, p: 2.0, c: 17.0, f: 0.1 },
+  bread: { kcal: 265, p: 9.0, c: 49.0, f: 3.2 },
+  egg: { kcal: 143, p: 13.0, c: 1.1, f: 9.5 },
+  milk: { kcal: 42, p: 3.4, c: 5.0, f: 1.0 },
+  yogurt: { kcal: 59, p: 10.0, c: 3.6, f: 0.4 },
+  chicken: { kcal: 165, p: 31.0, c: 0.0, f: 3.6 },
+  beef: { kcal: 250, p: 26.0, c: 0.0, f: 15.0 },
+  salad: { kcal: 20, p: 1.2, c: 3.6, f: 0.2 },
+  oatmeal: { kcal: 68, p: 2.4, c: 12.0, f: 1.4 }, // cooked
+};
+
+function lookupFood(rawName) {
+  const n = String(rawName || "").trim().toLowerCase();
+  if (!n) return null;
+  if (FOOD_DB[n]) return FOOD_DB[n];
+  const keys = Object.keys(FOOD_DB);
+  for (const k of keys) {
+    if (n.includes(k)) return FOOD_DB[k];
+  }
+  return null;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function renderReports() {

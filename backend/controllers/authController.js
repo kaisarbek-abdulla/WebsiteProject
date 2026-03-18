@@ -132,6 +132,36 @@ exports.getPatients = async (req, res) => {
   }
 };
 
+exports.getDoctors = async (req, res) => {
+  // Allow any authenticated user to discover doctors (patients can seek help, doctors can network).
+  try {
+    let doctors = [];
+    if (db) {
+      const snapshot = await db.collection('users').where('role', '==', 'doctor').get();
+      doctors = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          profile: data.profile || {}
+        };
+      });
+    } else {
+      doctors = store.users.filter(u => u.role === 'doctor').map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        profile: u.profile || {}
+      }));
+    }
+    res.json(doctors);
+  } catch (e) {
+    console.error('Get doctors failed:', e.message);
+    res.status(500).json({ error: 'Failed to get doctors' });
+  }
+};
+
 exports.getAllUsers = async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Access denied' });
   try {
