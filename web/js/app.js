@@ -39,6 +39,7 @@ const VITALS_SIM = {
   bloodPressure: { sys: 120, dia: 80 },
   oxygen: 98,
   temperatureC: 36.7,
+  baseWeightKg: 72.4,
   weightKg: 72.4,
   wave: [0.55, 0.6, 0.52, 0.66, 0.58, 0.62],
 };
@@ -58,7 +59,12 @@ function ensureVitalsSim() {
     // Other vitals: gentle drift (demo only)
     VITALS_SIM.oxygen = clamp(VITALS_SIM.oxygen + (Math.random() < 0.2 ? (Math.random() < 0.5 ? -1 : 1) : 0), 94, 100);
     VITALS_SIM.temperatureC = clamp(VITALS_SIM.temperatureC + (Math.random() < 0.18 ? (Math.random() < 0.5 ? -0.1 : 0.1) : 0), 36.1, 37.8);
-    VITALS_SIM.weightKg = clamp(VITALS_SIM.weightKg + (Math.random() < 0.08 ? (Math.random() < 0.5 ? -0.1 : 0.1) : 0), 45, 140);
+    // Drift around the profile weight, not away from it.
+    if (Math.random() < 0.08) {
+      const n = VITALS_SIM.baseWeightKg + (Math.random() < 0.5 ? -0.1 : 0.1);
+      VITALS_SIM.weightKg = clamp(n, 45, 140);
+      VITALS_SIM.baseWeightKg = VITALS_SIM.weightKg;
+    }
     if (Math.random() < 0.14) {
       VITALS_SIM.bloodPressure.sys = clamp(VITALS_SIM.bloodPressure.sys + (Math.random() < 0.5 ? -1 : 1), 95, 145);
       VITALS_SIM.bloodPressure.dia = clamp(VITALS_SIM.bloodPressure.dia + (Math.random() < 0.5 ? -1 : 1), 55, 95);
@@ -71,6 +77,19 @@ function ensureVitalsSim() {
 
     renderVitalsSimToDom();
   }, 900);
+}
+
+function syncVitalsFromProfile() {
+  try {
+    const raw = currentUser?.profile?.weight;
+    const w = typeof raw === "number" ? raw : raw ? Number(raw) : NaN;
+    if (!Number.isFinite(w) || w <= 0) return;
+    VITALS_SIM.baseWeightKg = w;
+    VITALS_SIM.weightKg = w;
+    renderVitalsSimToDom();
+  } catch (e) {
+    // ignore
+  }
 }
 
 function toggleVitalsSim() {
@@ -2332,6 +2351,8 @@ function attachProfileFormHandlers() {
           profileData,
         );
         currentUser = result;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+        syncVitalsFromProfile();
         alert("Profile saved successfully!");
         navigate("profile");
       } catch (err) {
@@ -2569,6 +2590,13 @@ async function loadSymptomHistory() {
     symptoms.forEach((symptom) => {
       const date = new Date(symptom.timestamp).toLocaleString();
       const severityClass = `severity-${symptom.severity}`;
+      const analysisPreviewRaw =
+        (typeof symptom.aiAnalysis === "string" && symptom.aiAnalysis) ||
+        (typeof symptom.analysis === "string" && symptom.analysis) ||
+        "";
+      const analysisPreview = analysisPreviewRaw
+        ? analysisPreviewRaw.substring(0, 140) + (analysisPreviewRaw.length > 140 ? "..." : "")
+        : "Analysis not available";
       html += `
         <div class="symptom-entry">
           <div class="symptom-header">
@@ -2577,7 +2605,7 @@ async function loadSymptomHistory() {
           </div>
           <div class="symptom-text">"${symptom.text}"</div>
           <div class="symptom-analysis-preview">
-            ${symptom.aiAnalysis ? symptom.aiAnalysis.substring(0, 100) + "..." : "Analysis not available"}
+            ${escapeHtml(analysisPreview)}
           </div>
           <button class="btn small" onclick="viewFullAnalysis(${JSON.stringify(symptom).replace(/"/g, "&quot;")})">View Full Analysis</button>
         </div>
@@ -2796,6 +2824,7 @@ async function validateSession() {
       profile: userData.profile,
     };
     localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    syncVitalsFromProfile();
     currentPage = "dashboard";
     render();
   } catch (err) {

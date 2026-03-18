@@ -1,6 +1,11 @@
 const { db } = require('../firebase/admin');
 const store = require('../models/inMemoryStore');
 
+// Railway/Node version safety: ensure we have fetch available.
+// Node 18+ has global fetch, older runtimes need node-fetch.
+// eslint-disable-next-line global-require
+const fetchFn = (typeof fetch !== 'undefined') ? fetch : require('node-fetch');
+
 // Simple keyword parsing for basic categorization
 const KEYWORDS = {
   fever: ['fever', 'temperature', 'hot', 'feverish'],
@@ -34,13 +39,17 @@ function localStructuredAnalysis(symptomText) {
 
   const urgent = severity === 'High' ? 'Consult emergency services if symptoms are severe or worsening.' : 'Consult a healthcare professional if symptoms persist.';
 
+  const hasCyr = /[А-Яа-яЁё]/.test(symptomText || '');
+  const analysisRu = `Демо-анализ (без внешнего ИИ). Похоже, у вас: ${detected.length ? detected.join(', ') : 'неспецифические симптомы'}. Возможные причины: ${conditions.join(', ')}.\n\nЧто можно сделать сейчас:\n• Отдых и питьё\n• Измерьте температуру\n• Если состояние ухудшается или есть одышка/боль в груди — срочно обратитесь за помощью.\n\nЭто не диагноз.`;
+  const analysisEn = `Demo analysis (no external AI key configured). Detected: ${detected.length ? detected.join(', ') : 'non-specific symptoms'}. Possible causes: ${conditions.join(', ')}.\n\nWhat you can do now:\n• Rest and hydration\n• Monitor temperature\n• If symptoms worsen or you have chest pain/trouble breathing: seek urgent care.\n\nThis is not a diagnosis.`;
+
   return {
     detectedSymptoms: detected,
     urgency: urgent,
     severity,
     conditions,
-    analysis:
-      `This is a demo analysis (no external AI key configured). Detected: ${detected.length ? detected.join(', ') : 'none'}.`,
+    analysis: hasCyr ? analysisRu : analysisEn,
+    aiAnalysis: hasCyr ? analysisRu : analysisEn,
     treatments: [
       'Rest and hydration',
       'Monitor temperature and symptoms',
@@ -69,11 +78,15 @@ async function analyzeWithGrok(symptomText) {
     return localStructuredAnalysis(symptomText);
   }
 
+  // Hard timeout so the UI doesn't "hang" during expo demos.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+
   // helper for fallback call to grok when groq fails
   async function analyzeWithGrokFallback(fallbackText) {
     if (!process.env.XAI_API_KEY) return { analysis: 'AI unavailable' };
     try {
-      const resp = await fetch('https://api.x.ai/v1/chat/completions', {
+      const resp = await fetchFn('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,12 +112,13 @@ async function analyzeWithGrok(symptomText) {
   }
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetchFn(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
+      signal: controller.signal,
       body: JSON.stringify({
         messages: [
           {
@@ -143,9 +157,12 @@ async function analyzeWithGrok(symptomText) {
       return { analysis: content };
     }
   } catch (error) {
-    console.error('AI API call failed:', error);
+    console.error('AI API call failed:', error && error.name ? `${error.name}: ${error.message}` : error);
     return localStructuredAnalysis(symptomText);
+  } finally {
+    clearTimeout(timeout);
   }
+}
 }
 
 exports.createEntry = async (req, res) => {
@@ -173,6 +190,10 @@ exports.createEntry = async (req, res) => {
       language: language || 'en',
       timestamp: new Date().toISOString()
     };
+
+    // Compatibility: some UIs expect aiAnalysis or analysis. Ensure both exist as strings when possible.
+    if (!entry.aiAnalysis && typeof entry.analysis === 'string') entry.aiAnalysis = entry.analysis;
+    if (!entry.analysis && typeof entry.aiAnalysis === 'string') entry.analysis = entry.aiAnalysis;
 
     if (db) {
       await db.collection('symptoms').doc(entry.id).set(entry);
