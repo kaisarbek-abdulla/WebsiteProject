@@ -163,7 +163,6 @@ async function analyzeWithGrok(symptomText) {
     clearTimeout(timeout);
   }
 }
-}
 
 exports.createEntry = async (req, res) => {
   // accept either text or symptoms field for backward compatibility
