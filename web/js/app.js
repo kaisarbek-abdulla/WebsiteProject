@@ -357,6 +357,8 @@ const translations = {
     addReminderDialog: "Add reminder dialog (demo)",
     foodAddedDemo: "Food item added (demo)",
     "doctor-chat": "Chat",
+    "admin-chat": "Admin Chat",
+    about: "About",
   },
   kz: {
     welcome: "Қош келдіңіз",
@@ -464,6 +466,8 @@ const translations = {
     addReminderDialog: "Еске салғыш диалогы (демо)",
     foodAddedDemo: "Тағам элементі қосылды (демо)",
     "doctor-chat": "Чат",
+    "admin-chat": "Админ чат",
+    about: "Біз туралы",
   },
   ru: {
     welcome: "Добро пожаловать",
@@ -573,6 +577,8 @@ const translations = {
     addReminderDialog: "Диалог добавления напоминания (демо)",
     foodAddedDemo: "Блюдо добавлено (демо)",
     "doctor-chat": "Чат",
+    "admin-chat": "Чат админа",
+    about: "О нас",
   },
 };
 function t(key) {
@@ -727,6 +733,14 @@ function render() {
     case "doctor-chat":
       root.innerHTML = renderDoctorChat();
       attachDoctorChatHandlers();
+      break;
+    case "admin-chat":
+      root.innerHTML = renderAdminChat();
+      attachAdminChatHandlers();
+      break;
+    case "about":
+      root.innerHTML = renderAbout();
+      attachAboutHandlers();
       break;
     case "symptoms":
       root.innerHTML = renderSymptoms();
@@ -1397,6 +1411,47 @@ function attachDoctorDashboardHandlers() {
   }
 }
 
+function renderAdminChat() {
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="page-header">
+        <h2>Admin Chat</h2>
+        <p class="subtitle">One-way support messaging to users and doctors</p>
+      </div>
+
+      <div class="doctor-layout">
+        <div class="card doctor-panel">
+          <div class="panel-head">
+            <h3 style="margin:0;">Users</h3>
+            <button class="btn small" id="admin-refresh-users" type="button">Refresh</button>
+          </div>
+          <div class="form-group" style="margin:10px 0 0;">
+            <input id="admin-user-search" type="text" placeholder="Search by name/email..." />
+          </div>
+          <div id="admin-users-list" class="list"></div>
+        </div>
+
+        <div class="card doctor-panel">
+          <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div>
+              <h3 id="chat-title" style="margin:0;">Chat</h3>
+              <div class="muted" id="chat-sub">Select a user to message.</div>
+            </div>
+            <button class="btn secondary small" type="button" onclick="navigate('dashboard')">Back</button>
+          </div>
+          <div id="chat-thread" class="chat-thread empty-state">No conversation selected.</div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-text" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button class="btn primary" type="submit">Send</button>
+          </form>
+          <div class="analysis-disclaimer" style="margin-top:12px;">
+            <strong>Note:</strong> Users cannot message admins back (one-way). Use this for follow-ups on complaints.
+          </div>
+        </div>
+      </div>
+    </main>${renderFooter()}`;
+}
+
 async function loadPatients() {
   try {
     const patients = await apiCall("/auth/patients/all", "GET");
@@ -1499,6 +1554,85 @@ function attachDoctorChatHandlers() {
       thread.classList.add("empty-state");
       thread.textContent = "No conversation selected. Go back and choose a patient.";
     }
+  }
+}
+
+async function loadAdminChatUsers() {
+  const list = document.getElementById("admin-users-list");
+  if (!list) return;
+  try {
+    const users = await apiCall("/auth/users/all", "GET");
+    const filtered = Array.isArray(users)
+      ? users.filter((u) => u && u.role !== "admin")
+      : [];
+    window.__adminChatUsers = filtered;
+    renderAdminChatUsers();
+  } catch (e) {
+    list.innerHTML = '<div class="empty-state">Failed to load users.</div>';
+  }
+}
+
+function renderAdminChatUsers() {
+  const list = document.getElementById("admin-users-list");
+  const q = (document.getElementById("admin-user-search")?.value || "").toLowerCase().trim();
+  if (!list) return;
+  const users = Array.isArray(window.__adminChatUsers) ? window.__adminChatUsers : [];
+  const shown = q
+    ? users.filter((u) =>
+        String(u.name || "").toLowerCase().includes(q) ||
+        String(u.email || "").toLowerCase().includes(q)
+      )
+    : users;
+
+  if (!shown.length) {
+    list.innerHTML = '<div class="empty-state">No users found.</div>';
+    return;
+  }
+  list.innerHTML = shown
+    .slice(0, 200)
+    .map((u) => {
+      const badge =
+        u.role === "doctor"
+          ? '<span class="analysis-badge moderate">Doctor</span>'
+          : '<span class="analysis-badge mild">User</span>';
+      return `<button class="list-item" type="button" data-admin-chat-user="${escapeHtml(u.id)}" data-admin-chat-name="${escapeHtml(u.name || "User")}">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div style="min-width:0;">
+            <div class="li-title">${escapeHtml(u.name || "User")}</div>
+            <div class="li-sub">${escapeHtml(u.email || "")}</div>
+          </div>
+          ${badge}
+        </div>
+      </button>`;
+    })
+    .join("");
+
+  list.querySelectorAll("[data-admin-chat-user]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-admin-chat-user");
+      const name = btn.getAttribute("data-admin-chat-name") || "User";
+      activeChatUserId = id;
+      activeChatUserName = name;
+      await openChatWith(id, name);
+    });
+  });
+}
+
+function attachAdminChatHandlers() {
+  if (currentUser?.role !== "admin") {
+    navigate("dashboard");
+    return;
+  }
+  const refreshBtn = document.getElementById("admin-refresh-users");
+  if (refreshBtn) refreshBtn.addEventListener("click", () => loadAdminChatUsers());
+  const search = document.getElementById("admin-user-search");
+  if (search) search.addEventListener("input", () => renderAdminChatUsers());
+
+  wireChatUI();
+  loadAdminChatUsers();
+
+  if (activeChatUserId) {
+    openChatWith(activeChatUserId, activeChatUserName || "User");
   }
 }
 
@@ -1633,6 +1767,7 @@ async function loadUsers() {
           <div class="user-actions">
             <button onclick="event.stopPropagation(); openEditUserModal('${u.id}', '${u.name}', '${u.email}', '${u.role}')" class="btn-small btn-edit">✏️ Edit</button>
             <button onclick="event.stopPropagation(); changeUserRole('${u.id}', '${u.role}')" class="btn-small btn-role">🔄 Role</button>
+            <button onclick="event.stopPropagation(); adminContactFromComplaint('${u.id}', '${u.name}', '${u.email}')" class="btn-small btn-edit">💬 Message</button>
             <button onclick="event.stopPropagation(); confirmDeleteUser('${u.id}', '${u.name}')" class="btn-small btn-delete">🗑️ Delete</button>
           </div>
         </div>
@@ -1744,6 +1879,9 @@ async function loadComplaints() {
         '<div style="text-align:center; color:#99a0ac; padding:40px;">No complaints found.</div>';
       return;
     }
+    // Cache for safe actions (don't inline user strings in onclick attributes).
+    window.__adminComplaintsCache = Array.isArray(complaints) ? complaints : [];
+
     let html = '<div style="display:grid; gap:12px;">';
     complaints.forEach((c) => {
       const statusColor =
@@ -1754,16 +1892,24 @@ async function loadComplaints() {
             : "#99a0ac";
       const statusIcon =
         c.status === "pending" ? "⏳" : c.status === "resolved" ? "✅" : "❓";
+      const userLabel =
+        c.user && (c.user.name || c.user.email)
+          ? `${escapeHtml(c.user.name || "User")} (${escapeHtml(c.user.email || "")}${c.user.role ? `, ${escapeHtml(c.user.role)}` : ""})`
+          : "";
+      const canContact = !!(c.userId && userLabel);
       html += `
-        <div style="background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(20,30,60,0.06); border-left:4px solid ${statusColor};">
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:var(--shadow-sm); border-left:4px solid ${statusColor};">
           <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
             <div style="flex:1;">
               <div style="font-size:12px; color:#99a0ac; margin-bottom:4px;">${new Date(c.createdAt).toLocaleString()}</div>
-              <p style="margin:0; color:#0b0838; line-height:1.5;">${c.message}</p>
+              <p style="margin:0; color:var(--text); line-height:1.5;">${escapeHtml(c.message || "")}</p>
             </div>
             <span style="background:${statusColor}; color:white; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; margin-left:12px; white-space:nowrap;">${statusIcon} ${c.status}</span>
           </div>
-          ${c.user ? `<div style="background:#f5f5f5; padding:8px 12px; border-radius:8px; font-size:12px; color:#0b0838;"><strong>User:</strong> ${c.user.name} (${c.user.email}) • <strong>Role:</strong> ${c.user.role}</div>` : ""}
+          ${userLabel ? `<div style="background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; font-size:12px; color:var(--text); border:1px solid var(--border);"><strong>User:</strong> ${userLabel}</div>` : ""}
+          ${canContact ? `<div style="display:flex; justify-content:flex-end; margin-top:10px;">
+            <button class="btn small" type="button" onclick="adminContactFromComplaint('${escapeHtml(String(c.userId))}')">Contact user</button>
+          </div>` : ""}
         </div>
       `;
     });
@@ -1774,6 +1920,19 @@ async function loadComplaints() {
     document.getElementById("complaints-list").innerHTML =
       '<p style="color:red; text-align:center;">Failed to load complaints.</p>';
   }
+}
+
+function adminContactFromComplaint(userId) {
+  if (!userId) return;
+  const complaints = Array.isArray(window.__adminComplaintsCache) ? window.__adminComplaintsCache : [];
+  const found = complaints.find((c) => String(c.userId) === String(userId));
+  const name = found?.user?.name || "User";
+  const email = found?.user?.email || "";
+  activeChatUserId = userId;
+  activeChatUserName = name || "User";
+  // For quick context in the chat header.
+  if (email) activeChatUserName = `${activeChatUserName} (${email})`;
+  navigate("admin-chat");
 }
 
   // ===== OTHER PAGES (STUB) =====
@@ -2357,34 +2516,12 @@ function attachComplaintsHandlers() {
   loadComplaintsHistory();
 }
 
-async function loadComplaints() {
-  try {
-    const complaints = await apiCall("/complaints", "GET");
-    const listDiv = document.getElementById("complaints-list");
-    if (complaints.length === 0) {
-      listDiv.innerHTML = `<p>${t("noComplaintsFound")}</p>`;
-      return;
-    }
-    let html = "<h3>Your Complaints</h3><ul>";
-    complaints.forEach((c) => {
-      html += `<li><strong>${new Date(c.createdAt).toLocaleString()}</strong>: ${c.message} (${c.status})`;
-      if (currentUser.role === "admin" && c.user) {
-        html += ` - User: ${c.user.name} (${c.user.email}, ${c.user.role})`;
-      }
-      html += "</li>";
-    });
-    html += "</ul>";
-    listDiv.innerHTML = html;
-  } catch (err) {
-    console.error("Load complaints failed:", err);
-  }
-}
-
 function renderProfile() {
   if (!currentUser || !currentUser.profile) {
     return `<div class="container"><p>Loading profile...</p></div>`;
   }
   const profile = currentUser.profile || {};
+  const showAdminInbox = currentUser.role !== "admin";
   return `${renderHeader()}${renderNav()}
     <main class="container">
       <div class="card">
@@ -2469,10 +2606,19 @@ function renderProfile() {
           <div style="margin-top:24px; display:flex; gap:12px;">
             <button type="submit" class="btn primary">Save Profile</button>
             <button type="button" class="btn" id="cancel-profile" style="background-color:#f5f5f5; color:#333;">Cancel</button>
+            <button type="button" class="btn secondary" onclick="navigate('about')">${t("about") || "About"}</button>
             <button type="button" class="btn primary" id="logout-btn" style="background-color:#d32f2f; margin-left:auto;">Logout</button>
           </div>
         </form>
       </div>
+
+      ${showAdminInbox ? `
+        <div class="card" style="margin-top:16px;">
+          <h3 style="margin-top:0;">Admin messages</h3>
+          <div class="muted" style="margin-bottom:10px;">Read-only updates from the admin team.</div>
+          <div id="admin-inbox" class="empty-state">No messages.</div>
+        </div>
+      ` : ""}
     </main>
     ${renderFooter()}`;
 }
@@ -2574,6 +2720,44 @@ function attachProfileFormHandlers() {
         alert("Error saving profile: " + err.message);
       }
     });
+
+  // Load admin inbox for patients/doctors (one-way admin -> user).
+  if (currentUser?.role !== "admin") {
+    loadAdminInboxMessages();
+  }
+}
+
+async function loadAdminInboxMessages() {
+  const box = document.getElementById("admin-inbox");
+  if (!box) return;
+  try {
+    const msgs = await apiCall("/messages/admin-inbox", "GET");
+    if (!Array.isArray(msgs) || msgs.length === 0) {
+      box.classList.add("empty-state");
+      box.textContent = "No messages.";
+      return;
+    }
+    box.classList.remove("empty-state");
+    box.innerHTML = msgs
+      .slice(-20)
+      .reverse()
+      .map((m) => {
+        const dt = m.createdAt ? new Date(m.createdAt).toLocaleString() : "";
+        return `<div class="analysis-panel" style="margin-bottom:10px;">
+          <div class="analysis-head">
+            <div>
+              <div class="analysis-title">Admin</div>
+              <div class="analysis-sub">${escapeHtml(dt)}</div>
+            </div>
+          </div>
+          <div class="analysis-text">${escapeHtml(m.text || "").replace(/\\n/g, "<br>")}</div>
+        </div>`;
+      })
+      .join("");
+  } catch (e) {
+    box.classList.add("empty-state");
+    box.textContent = "Failed to load messages.";
+  }
 }
 
 // placeholder handlers for new UI elements
@@ -2998,6 +3182,9 @@ function renderNav() {
   if (currentUser?.role === "doctor") {
     items.splice(1, 0, ["doctor-chat", "💬"]);
   }
+  if (currentUser?.role === "admin") {
+    items.splice(1, 0, ["admin-chat", "💬"]);
+  }
   const isDesktop = window.innerWidth >= 768;
   let html = `<nav class="${isDesktop ? "sidebar" : "main-nav"}" aria-label="Primary"><div ${isDesktop ? "" : 'class="nav-scroll"'}>`;
   items.forEach(([page, icon]) => {
@@ -3009,6 +3196,109 @@ function renderNav() {
 
 function renderFooter() {
   return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant</footer>`;
+}
+
+function renderAbout() {
+  const team = [
+    { name: "Abdulla Kaisarbek", role: "Leader", area: "Backend Developer" },
+    { name: "Kazikhan Dias", role: "", area: "Backend Developer" },
+    { name: "Mukhit Zhanibek", role: "", area: "Frontend Developer" },
+    { name: "Orynbassar Darmen", role: "", area: "Mobile App Developer" },
+    { name: "Yessen Rakhman", role: "", area: "UI/UX Designer" },
+    { name: "Amantay Daryn", role: "", area: "Tester" },
+  ];
+
+  const contactPhone = "+7 747 899 1401";
+  const contactEmail = "Abdullkaisar@outlook.com";
+
+  const lang = typeof currentLang === "string" ? currentLang : "en";
+  const isRu = lang === "ru";
+  const isKz = lang === "kz";
+
+  const title = isRu ? "О нас" : isKz ? "Біз туралы" : "About Us";
+  const subtitle = isRu
+    ? "Команда, история и контакты для поддержки проекта"
+    : isKz
+      ? "Команда, тарих және байланыс"
+      : "Team, story, and contacts";
+
+  const story = isRu
+    ? [
+        "PULSE родился как идея сделать понятного и полезного помощника для здоровья: чтобы пациент мог быстро описать симптомы, вести простые записи и без лишнего стресса общаться с врачом.",
+        "Мы работали над проектом 10 недель. Первые 6–7 недель мы полностью сфокусировались на веб‑версии: архитектура, роли пользователей, интерфейс, интеграция с API, деплой и стабильность. Это заняло больше всего времени, потому что мы хотели, чтобы сайт выглядел и ощущался как полноценный продукт, а не как «учебная работа».",
+        "Параллельно развивалось и мобильное приложение на Flutter. Сейчас оно ещё на ранней стадии, но мы закладывали основы: стили, навигацию, структуру экранов и интеграции, чтобы позже быстро довести до production‑качества.",
+        "Наш принцип был простой: меньше «пустых функций», больше реального пользовательского пути. Поэтому мы постоянно тестировали сценарии, улучшали UX и делали интерфейс аккуратным в светлой и тёмной теме.",
+        "Мы очень хотим продолжить развитие PULSE после экспо: улучшить аналитику симптомов, сделать отчёты, усилить чат с врачами, добавить реальные интеграции с устройствами и довести мобильное приложение до уровня, когда им можно будет удобно пользоваться каждый день.",
+      ]
+    : [
+        "PULSE is a 10-week team project focused on making health tracking and patient-doctor communication simple and accessible.",
+        "We shipped a web version first (roles, UI, API, deployment) and are building a Flutter mobile app in parallel (still early-stage).",
+        "After the expo, we plan to improve AI tools, reports, messaging, device integrations, and bring the mobile app to production quality.",
+      ];
+
+  const thanks = isRu
+    ? "Спасибо за интерес к PULSE. Любая финансовая или инвестиционная поддержка поможет нам оплачивать инфраструктуру (хостинг/домены), улучшать дизайн и UX, развивать мобильное приложение и добавлять новые полезные функции. Мы обещаем использовать поддержку во благо проекта."
+    : isKz
+      ? "PULSE жобасына қызығушылық танытқаныңызға рахмет. Қаржылық/инвестициялық қолдау инфрақұрылымды, дизайнды, мобильді қосымшаны және жаңа функцияларды дамытуға жұмсалады."
+      : "Thank you for supporting PULSE. Funding helps us cover infrastructure, improve UX/design, grow the mobile app, and build new features responsibly.";
+
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="page-header">
+        <h2>${escapeHtml(title)}</h2>
+        <p class="subtitle">${escapeHtml(subtitle)}</p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">${isRu ? "История проекта" : isKz ? "Жоба тарихы" : "Project Story"}</h3>
+        ${story
+          .map((p) => `<p style="margin:10px 0; line-height:1.7;">${escapeHtml(p)}</p>`)
+          .join("")}
+        <p class="muted" style="margin-top:12px;">
+          ${isRu
+            ? "Примечание: в экспо‑сборке часть функций может работать в демо‑режиме, чтобы показать полный опыт даже без подключённых устройств."
+            : isKz
+              ? "Ескерту: Expo нұсқасында кейбір функциялар демо режимінде болуы мүмкін."
+              : "Note: some expo features may run in demo mode to showcase the full experience."}
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">${isRu ? "Команда разработчиков" : isKz ? "Әзірлеушілер командасы" : "Team"}</h3>
+        <div style="display:grid; gap:10px; margin-top:12px;">
+          ${team
+            .map((m) => {
+              const top = `${m.name}${m.role ? ` | ${m.role}` : ""}`;
+              return `<div class="analysis-panel" style="padding:12px;">
+                <div class="analysis-head" style="margin-bottom:6px;">
+                  <div>
+                    <div class="analysis-title" style="font-size:1rem;">${escapeHtml(top)}</div>
+                    <div class="analysis-sub">${escapeHtml(m.area)}</div>
+                  </div>
+                </div>
+              </div>`;
+            })
+            .join("")}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">${isRu ? "Контакты для финансовой/инвестиционной поддержки" : isKz ? "Қаржылық/инвестициялық қолдау байланысы" : "Funding / Investment Contact"}</h3>
+        <div class="analysis-pills" style="margin-top:10px;">
+          <span class="analysis-pill">📞 ${escapeHtml(contactPhone)}</span>
+          <span class="analysis-pill">✉️ ${escapeHtml(contactEmail)}</span>
+        </div>
+        <p style="margin-top:12px; line-height:1.7;">${escapeHtml(thanks)}</p>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn secondary" type="button" onclick="navigate('profile')">Back</button>
+      </div>
+    </main>${renderFooter()}`;
+}
+
+function attachAboutHandlers() {
+  // no-op (static page)
 }
 
 // Validate session on page load

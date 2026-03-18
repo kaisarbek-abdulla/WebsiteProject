@@ -14,7 +14,8 @@ let data = {
   users: [],
   symptoms: [],
   reminders: [],
-  messages: []
+  messages: [],
+  complaints: []
 };
 
 // Load from file if it exists
@@ -23,6 +24,7 @@ if (fs.existsSync(dataFile)) {
     data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
     // Backward compatibility for older store.json files
     if (!data.messages) data.messages = [];
+    if (!data.complaints) data.complaints = [];
   } catch (e) {
     console.warn('Could not load store.json, using empty store');
   }
@@ -50,6 +52,9 @@ module.exports = {
   },
   get messages() {
     return data.messages;
+  },
+  get complaints() {
+    return data.complaints;
   },
   // Override array methods to auto-save
   addUser(user) {
@@ -93,6 +98,11 @@ module.exports = {
     data.messages.push(message);
     saveToFile();
     return message;
+  },
+  addComplaint(complaint) {
+    data.complaints.push(complaint);
+    saveToFile();
+    return complaint;
   },
   save() {
     saveToFile();
