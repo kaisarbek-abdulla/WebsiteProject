@@ -12,22 +12,34 @@ const API_BASE = (function () {
   }
 })();
 
-// Register service worker for PWA
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("../sw.js")
-      .then((registration) => {
-        console.log("SW registered:", registration);
-      })
-      .catch((error) => {
-        console.log("SW registration failed:", error);
-      });
-  });
+// Expo-mode: disable service workers so users don't need to keep clearing cache to see updates.
+// This will unregister any previously installed SW for this origin.
+async function disableServiceWorkersForExpo() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map((r) => r.unregister()));
+    if (regs.length) {
+      console.log("Service workers unregistered for expo mode.");
+      // Force one reload so the page is no longer controlled by the old SW.
+      if (!sessionStorage.getItem("sw_unregistered_reload")) {
+        sessionStorage.setItem("sw_unregistered_reload", "1");
+        window.location.reload();
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
 }
+disableServiceWorkersForExpo();
 
 let currentUser = null;
 let authToken = localStorage.getItem("authToken") || null;
+
+// Doctor/patient chat selection state (shared between dashboard and chat page)
+let activeChatUserId = null;
+let activeChatUserName = null;
+let activePatient = null;
 
 // ===== Modal helpers (dynamic modals used across pages) =====
 function openDynamicModal(overlayEl) {
@@ -242,7 +254,7 @@ const translations = {
   en: {
     welcome: "Welcome",
     dashboard: "Dashboard",
-    symptoms: "Symptoms",
+    symptoms: "AI Tools",
     reminders: "Reminders",
     devices: "Devices",
     vitals: "Vitals",
@@ -344,11 +356,12 @@ const translations = {
     viewVitals: "View vitals",
     addReminderDialog: "Add reminder dialog (demo)",
     foodAddedDemo: "Food item added (demo)",
+    "doctor-chat": "Chat",
   },
   kz: {
     welcome: "Қош келдіңіз",
     dashboard: "Басқару панелі",
-    symptoms: "Симптомдар",
+    symptoms: "AI құралдары",
     reminders: "Еске салғыштар",
     devices: "Құрылғылар",
     vitals: "Маңызды көрсеткіштер",
@@ -450,11 +463,12 @@ const translations = {
     viewVitals: "Көрсеткіштерді көру",
     addReminderDialog: "Еске салғыш диалогы (демо)",
     foodAddedDemo: "Тағам элементі қосылды (демо)",
+    "doctor-chat": "Чат",
   },
   ru: {
     welcome: "Добро пожаловать",
     dashboard: "Панель",
-    symptoms: "Симптомы",
+    symptoms: "AI инструменты",
     reminders: "Напоминания",
     devices: "Устройства",
     vitals: "Показатели",
@@ -558,6 +572,7 @@ const translations = {
     viewVitals: "Просмотреть показатели",
     addReminderDialog: "Диалог добавления напоминания (демо)",
     foodAddedDemo: "Блюдо добавлено (демо)",
+    "doctor-chat": "Чат",
   },
 };
 function t(key) {
@@ -708,6 +723,10 @@ function render() {
     case "dashboard":
       root.innerHTML = renderDashboard();
       attachDashboardHandlers();
+      break;
+    case "doctor-chat":
+      root.innerHTML = renderDoctorChat();
+      attachDoctorChatHandlers();
       break;
     case "symptoms":
       root.innerHTML = renderSymptoms();
@@ -1047,17 +1066,44 @@ function renderDoctorDashboard() {
         <div class="card doctor-panel">
           <div class="panel-head">
             <div>
-              <h3 id="chat-title" style="margin:0;">Messages</h3>
-              <div class="muted" id="chat-sub">Select a patient to start chatting.</div>
+              <h3 style="margin:0;">Patient overview</h3>
+              <div class="muted" id="doctor-chat-selected">Select a patient on the left.</div>
             </div>
           </div>
-          <div id="chat-thread" class="chat-thread empty-state">No conversation selected.</div>
-          <form id="chat-form" class="chat-form">
-            <input id="chat-text" type="text" placeholder="Type a message..." autocomplete="off" />
-            <button class="btn primary" type="submit">Send</button>
-            <button class="btn" type="button" id="recommend-btn">Recommend yourself</button>
-          </form>
+          <div id="doctor-patient-overview" class="empty-state" style="margin-top:10px;">
+            No patient selected.
+          </div>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button class="btn primary" id="open-doctor-chat" type="button" disabled>Open chat</button>
+          </div>
         </div>
+      </div>
+    </main>${renderFooter()}`;
+}
+
+function renderDoctorChat() {
+  const name = activeChatUserName || "Patient";
+  return `${renderHeader()}${renderNav()}
+    <main class="container">
+      <div class="page-header">
+        <h2>Doctor Chat</h2>
+        <p class="subtitle">Conversation with your patient</p>
+      </div>
+
+      <div class="card doctor-panel">
+        <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <h3 id="chat-title" style="margin:0;">Chat with ${escapeHtml(name)}</h3>
+            <div class="muted" id="chat-sub">Messages are stored on the server (demo).</div>
+          </div>
+          <button class="btn secondary small" type="button" onclick="navigate('dashboard')">Back</button>
+        </div>
+        <div id="chat-thread" class="chat-thread empty-state">No conversation selected.</div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-text" type="text" placeholder="Type a message..." autocomplete="off" />
+          <button class="btn primary" type="submit">Send</button>
+          <button class="btn" type="button" id="recommend-btn">Recommend yourself</button>
+        </form>
       </div>
     </main>${renderFooter()}`;
 }
@@ -1162,117 +1208,95 @@ function attachPatientDashboardHandlers() {
           result.disclaimer ||
           "This analysis is for educational purposes only. Consult a healthcare professional.";
 
-        resultDiv.style.display = "block";
-        let html = `<strong style="font-size:1.2em; color:#1a1a1a;">📋 Comprehensive Analysis Result</strong><br><hr style="margin:10px 0; border:none; border-top:2px solid #e0e0e0;"><br>`;
-
-        // Symptoms detected summary
-        if (detectedSymptoms.length > 0) {
-          html += `<div style="margin-bottom:12px; padding:10px; background-color:#e8f5e9; border-left:4px solid #4caf50; border-radius:4px;"><strong>🔍 Symptoms Detected:</strong> <span style="color:#2e7d32; font-weight:bold;">${symptomsCount}</span> - ${detectedSymptoms.map((s) => "<strong>" + s.charAt(0).toUpperCase() + s.slice(1) + "</strong>").join(", ")}</div>`;
+        function esc(x) {
+          return escapeHtml(typeof x === "string" ? x : String(x ?? ""));
         }
-
-        // Urgency alert with enhanced styling
+        function pill(text2) {
+          return `<span class="analysis-pill">${esc(text2)}</span>`;
+        }
         const urgencyText = typeof urgency === "string" ? urgency : "";
-        if (urgencyText === "URGENT") {
-          html += `<div style="color:#fff; background-color:#d32f2f; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #b71c1c;">⚠️ URGENT ALERT: Call 911 immediately - This requires emergency medical attention!</div>`;
-        } else if (
-          urgencyText.includes("ER") ||
-          urgencyText.includes("Emergency")
-        ) {
-          html += `<div style="color:#fff; background-color:#f57c00; padding:14px; border-radius:6px; margin-bottom:12px; font-weight:bold; border:2px solid #e65100;">🚨 Emergency Alert: ${urgencyText} - Seek emergency care immediately!</div>`;
-        } else if (
-          urgencyText.includes("Consult") ||
-          urgencyText.includes("See")
-        ) {
-          html += `<div style="color:#d32f2f; background-color:#ffebee; padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid #d32f2f;"><strong>⏱️ Recommended Action:</strong> ${urgencyText}</div>`;
-        }
+        const badgeClass =
+          severityVal === "High"
+            ? "analysis-badge severe"
+            : severityVal === "Medium" || severityVal === "Low-Medium"
+              ? "analysis-badge moderate"
+              : "analysis-badge mild";
 
-        // Severity with visual indicator
-        const severityColors = {
-          High: { bg: "#ffcdd2", text: "#d32f2f" },
-          Medium: { bg: "#ffe0b2", text: "#f57c00" },
-          "Low-Medium": { bg: "#fff9c4", text: "#f9a825" },
-          Low: { bg: "#e8f5e9", text: "#388e3c" },
-        };
-        const sColor = severityColors[severityVal] || severityColors["Low"];
-        html += `<div style="margin-bottom:12px; padding:10px; background-color:${sColor.bg}; border-radius:4px; border-left:4px solid ${sColor.text};"><strong>📊 Severity Level:</strong> <span style="color:${sColor.text}; font-weight:bold; font-size:1.05em;">${severityVal}</span></div>`;
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = `
+          <div class="analysis-panel">
+            <div class="analysis-head">
+              <div>
+                <div class="analysis-title">${t("symptomAnalysis")}</div>
+                <div class="analysis-sub">${esc(text)}</div>
+              </div>
+              <div class="${badgeClass}">${esc(severityVal)}</div>
+            </div>
 
-        // Possible conditions
-        html += `<div style="margin-bottom:12px;"><strong>🏥 Possible Conditions (${conditions.length}):</strong><div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">`;
-        conditions.forEach((cond) => {
-          html += `<span style="background-color:#e3f2fd; color:#1565c0; padding:6px 12px; border-radius:20px; font-size:0.9em;">${cond}</span>`;
-        });
-        html += `</div></div>`;
+            ${detectedSymptoms.length ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">${t("detectedSymptoms")}</div>
+                <div class="analysis-pills">
+                  ${detectedSymptoms.slice(0, 10).map((s) => pill(s)).join("")}
+                </div>
+              </div>
+            ` : ""}
 
-        // Detailed Analysis
-        const analysisLines = analysisText.split("\n").filter((l) => l.trim());
-        html += `<div style="margin-bottom:12px; padding:12px; background-color:#f5f5f5; border-left:5px solid #2b67ff; border-radius:4px;"><strong style="font-size:1.05em;">📝 Detailed Analysis:</strong><br><div style="margin-top:8px; line-height:1.6; color:#333;">`;
-        analysisLines.forEach((line, idx) => {
-          if (
-            line.includes("⚠️") ||
-            line.includes("Multiple") ||
-            line.includes("ALERT")
-          ) {
-            html += `<div style="color:#d32f2f; font-weight:600; margin-bottom:4px;">${line}</div>`;
-          } else if (line.startsWith("•")) {
-            html += `<div style="margin-left:12px; margin-bottom:4px; color:#555;">${line}</div>`;
-          } else {
-            html += `<div style="margin-bottom:4px; color:#333;">${line}</div>`;
-          }
-        });
-        html += `</div></div>`;
+            ${conditions.length ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">Possible conditions</div>
+                <div class="analysis-pills">
+                  ${conditions.slice(0, 12).map((c) => pill(c)).join("")}
+                </div>
+              </div>
+            ` : ""}
 
-        // Treatments
-        if (result.treatments && result.treatments.length > 0) {
-          html += `<div style="margin-bottom:12px; padding:12px; background-color:#f3e5f5; border-left:4px solid:#7b1fa2; border-radius:4px;"><strong>💊 Treatment Recommendations:</strong><ul style="margin:8px 0; padding-left:20px;">`;
-          result.treatments.forEach((treatment) => {
-            html += `<li style="margin-bottom:6px; color:#4a148c;">${treatment}</li>`;
-          });
-          html += `</ul></div>`;
-        }
+            ${analysisText ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">${t("aiAnalysis")}</div>
+                <div class="analysis-text">${esc(analysisText).replace(/\\n/g, "<br>")}</div>
+              </div>
+            ` : ""}
 
-        // Diagnostic tests
-        if (result.diagnosticTests && result.diagnosticTests.length > 0) {
-          html += `<div style="margin-bottom:12px; padding:12px; background-color:#e0f2f1; border-left:4px solid #00695c; border-radius:4px;"><strong>🔬 Recommended Diagnostic Tests:</strong><ul style="margin:8px 0; padding-left:20px;">`;
-          result.diagnosticTests.slice(0, 8).forEach((test) => {
-            html += `<li style="margin-bottom:6px;"><code style="background-color:#ffffff; padding:4px 8px; border-radius:3px; border:1px solid #b2dfdb; color:#00695c; font-weight:500;">${test}</code></li>`;
-          });
-          if (result.diagnosticTests.length > 8) {
-            html += `<li style="color:#666; font-style:italic;">+ ${result.diagnosticTests.length - 8} more tests</li>`;
-          }
-          html += `</ul></div>`;
-        }
+            ${treatments.length ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">Treatments</div>
+                <ul class="analysis-list">${treatments.slice(0, 10).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+              </div>
+            ` : ""}
 
-        // Health advice
-        if (result.healthAdvice && result.healthAdvice.length > 0) {
-          html += `<div style="margin-bottom:12px; padding:12px; background-color:#fef3e2; border-left:4px solid #ff6f00; border-radius:4px;"><strong>💡 Health Tips & Advice:</strong><ul style="margin:8px 0; padding-left:20px;">`;
-          result.healthAdvice.slice(0, 6).forEach((advice) => {
-            html += `<li style="margin-bottom:6px; color:#e65100;">${advice}</li>`;
-          });
-          if (result.healthAdvice.length > 6) {
-            html += `<li style="color:#999; font-style:italic;">+ ${result.healthAdvice.length - 6} more tips</li>`;
-          }
-          html += `</ul></div>`;
-        }
+            ${diagnosticTests.length ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">Diagnostic tests</div>
+                <ul class="analysis-list">${diagnosticTests.slice(0, 10).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+              </div>
+            ` : ""}
 
-        // When to seek help box
-        html += `<div style="margin-bottom:12px; padding:12px; background-color:#fff3cd; border:2px solid #ff9800; border-radius:4px;"><strong style="color:#ff6f00;">⚠️ Seek Immediate Medical Care If:</strong><ul style="margin:8px 0; padding-left:20px; color:#d84315;">
-          <li>Symptoms worsen suddenly</li>
-          <li>Difficulty breathing or chest pain develops</li>
-          <li>Loss of consciousness or severe confusion</li>
-          <li>Severe allergic reactions or difficulty swallowing</li>
-          <li>Symptoms persist or new symptoms appear</li>
-        </ul></div>`;
+            ${healthAdvice.length ? `
+              <div class="analysis-row">
+                <div class="analysis-row-title">Advice</div>
+                <ul class="analysis-list">${healthAdvice.slice(0, 10).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+              </div>
+            ` : ""}
 
-        // Disclaimer
-        html += `<div style="font-size:0.9em; color:#d32f2f; background-color:#fff3e0; margin-top:16px; padding:14px; border-left:5px solid #d32f2f; border-radius:4px; border: 1px solid #ffb74d;"><strong>⚖️ Medical Disclaimer:</strong><br><span style="line-height:1.6;">${disclaimer} <strong>Always consult with a healthcare professional for proper diagnosis and treatment.</strong></span></div>`;
+            ${urgencyText ? `
+              <div class="analysis-note">
+                <div class="analysis-note-title">Next step</div>
+                <div class="analysis-note-body">${esc(urgencyText)}</div>
+              </div>
+            ` : ""}
 
-        resultDiv.innerHTML = html;
+            <div class="analysis-disclaimer">
+              <strong>${t("important")}</strong> ${esc(disclaimer)}
+            </div>
+          </div>
+        `;
 
         analyzeBtn.textContent = "Analyze";
         analyzeBtn.disabled = false;
       } catch (err) {
         resultDiv.style.display = "block";
-        resultDiv.innerHTML = `<strong style="color:#d32f2f; font-size:1.05em;">❌ Analysis Error:</strong><br><div style="margin-top:8px; color:#666;">${err.message}</div>`;
+        resultDiv.innerHTML = `<div class="analysis-panel"><div class="analysis-title">Error</div><div class="analysis-text">${escapeHtml(err.message)}</div></div>`;
         analyzeBtn.textContent = "Analyze";
         analyzeBtn.disabled = false;
       }
@@ -1364,7 +1388,13 @@ function attachDoctorDashboardHandlers() {
   const refreshBtn = document.getElementById("refresh-patients-btn");
   if (refreshBtn) refreshBtn.addEventListener("click", () => loadPatients());
 
-  wireChatUI();
+  const openBtn = document.getElementById("open-doctor-chat");
+  if (openBtn) {
+    openBtn.addEventListener("click", () => {
+      if (!activeChatUserId) return;
+      navigate("doctor-chat");
+    });
+  }
 }
 
 async function loadPatients() {
@@ -1394,7 +1424,59 @@ async function loadPatients() {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-chat-user");
         const name = btn.getAttribute("data-chat-name") || "Patient";
-        await openChatWith(id, name);
+        // Select patient for chat, then let doctor open the separate chat section.
+        activeChatUserId = id;
+        activeChatUserName = name;
+        activePatient = patients.find((p) => String(p.id) === String(id)) || null;
+        const label = document.getElementById("doctor-chat-selected");
+        if (label) label.textContent = `Selected: ${name}`;
+        const openBtn = document.getElementById("open-doctor-chat");
+        if (openBtn) openBtn.disabled = !activeChatUserId;
+
+        const panel = document.getElementById("doctor-patient-overview");
+        if (panel) {
+          if (!activePatient) {
+            panel.classList.add("empty-state");
+            panel.textContent = "No patient selected.";
+          } else {
+            panel.classList.remove("empty-state");
+            const pr = activePatient.profile || {};
+            const age = pr.age ?? "—";
+            const height = pr.height ?? "—";
+            const weight = pr.weight ?? "—";
+            const bloodType = pr.bloodType ?? "—";
+            const allergies = pr.allergies ? escapeHtml(String(pr.allergies)) : "—";
+            const meds = pr.medications ? escapeHtml(String(pr.medications)) : "—";
+            panel.innerHTML = `
+              <div class="analysis-panel">
+                <div class="analysis-head">
+                  <div>
+                    <div class="analysis-title">${escapeHtml(activePatient.name)}</div>
+                    <div class="analysis-sub">${escapeHtml(activePatient.email)}</div>
+                  </div>
+                  <div class="analysis-badge mild">Patient</div>
+                </div>
+                <div class="analysis-row">
+                  <div class="analysis-row-title">Vitals (profile)</div>
+                  <div class="analysis-pills">
+                    <span class="analysis-pill">Age: ${escapeHtml(String(age))}</span>
+                    <span class="analysis-pill">Height: ${escapeHtml(String(height))}</span>
+                    <span class="analysis-pill">Weight: ${escapeHtml(String(weight))}</span>
+                    <span class="analysis-pill">Blood: ${escapeHtml(String(bloodType))}</span>
+                  </div>
+                </div>
+                <div class="analysis-row">
+                  <div class="analysis-row-title">Allergies</div>
+                  <div class="analysis-text">${allergies}</div>
+                </div>
+                <div class="analysis-row">
+                  <div class="analysis-row-title">Medications</div>
+                  <div class="analysis-text">${meds}</div>
+                </div>
+              </div>
+            `;
+          }
+        }
       });
     });
   } catch (err) {
@@ -1402,8 +1484,23 @@ async function loadPatients() {
   }
 }
 
-let activeChatUserId = null;
-let activeChatUserName = null;
+function attachDoctorChatHandlers() {
+  // Only doctors should use this page; if not, bounce back.
+  if (currentUser?.role !== "doctor") {
+    navigate("dashboard");
+    return;
+  }
+  wireChatUI();
+  if (activeChatUserId) {
+    openChatWith(activeChatUserId, activeChatUserName || "Patient");
+  } else {
+    const thread = document.getElementById("chat-thread");
+    if (thread) {
+      thread.classList.add("empty-state");
+      thread.textContent = "No conversation selected. Go back and choose a patient.";
+    }
+  }
+}
 
 function wireChatUI() {
   const form = document.getElementById("chat-form");
@@ -1681,7 +1778,27 @@ async function loadComplaints() {
 
   // ===== OTHER PAGES (STUB) =====
 function renderSymptoms() {
-  // form to log new symptom plus history list
+  const role = currentUser ? currentUser.role : "patient";
+  if (role === "doctor") {
+    return `${renderHeader()}${renderNav()}<main class="container">
+        <div class="page-header"><h2>${t("symptoms")}</h2><p class="subtitle">Nurse AI assistant for doctors</p></div>
+        <div class="card">
+          <h3 style="margin-top:0;">AI Nurse Assistant</h3>
+          <p class="muted">Ask for reminders, medication notes, red flags, differential ideas, or what to do next.</p>
+          <div class="form-group">
+            <label for="doctor-ai-question">Question</label>
+            <textarea id="doctor-ai-question" placeholder="e.g. Patient has ankle pain after running, what red flags and home care advice?" style="min-height:110px;"></textarea>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="doctor-ai-ask" class="btn primary" type="button">Ask assistant</button>
+            <button id="doctor-ai-clear" class="btn secondary" type="button">Clear</button>
+          </div>
+          <div id="doctor-ai-answer" style="margin-top:14px; display:none;"></div>
+        </div>
+      </main>${renderFooter()}`;
+  }
+
+  // patient: symptom analyzer + history
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("symptoms")}</h2><p class="subtitle">${t("describeSymptoms")}</p></div>
       <div class="card">
@@ -1704,6 +1821,12 @@ function renderSymptoms() {
 }
 
 function attachSymptomsHandlers() {
+  const role = currentUser ? currentUser.role : "patient";
+  if (role === "doctor") {
+    attachDoctorAiToolsHandlers();
+    return;
+  }
+
   loadSymptomHistory();
   const clearBtn = document.getElementById("clear-symptoms-btn");
   if (clearBtn) {
@@ -1719,6 +1842,49 @@ function attachSymptomsHandlers() {
       } catch (err) {
         console.error("Clear symptom history failed:", err);
         alert(t("clearHistoryFailed") || "Failed to clear history.");
+      }
+    });
+  }
+}
+
+function attachDoctorAiToolsHandlers() {
+  const askBtn = document.getElementById("doctor-ai-ask");
+  const clearBtn = document.getElementById("doctor-ai-clear");
+  const qEl = document.getElementById("doctor-ai-question");
+  const out = document.getElementById("doctor-ai-answer");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (qEl) qEl.value = "";
+      if (out) {
+        out.style.display = "none";
+        out.innerHTML = "";
+      }
+    });
+  }
+  if (askBtn) {
+    askBtn.addEventListener("click", async () => {
+      const q = (qEl?.value || "").trim();
+      if (!q) return;
+      try {
+        askBtn.disabled = true;
+        askBtn.textContent = "Thinking...";
+        const resp = await apiCall("/ai/doctor-assistant", "POST", {
+          question: q,
+          language: typeof currentLang === "string" ? currentLang : "en",
+        });
+        const answer = resp && typeof resp.answer === "string" ? resp.answer : "";
+        if (out) {
+          out.style.display = "block";
+          out.innerHTML = `<div class="analysis-panel"><div class="analysis-title">Assistant</div><div class="analysis-text">${escapeHtml(answer).replace(/\\n/g, "<br>")}</div></div>`;
+        }
+      } catch (e) {
+        if (out) {
+          out.style.display = "block";
+          out.innerHTML = `<div class="analysis-panel"><div class="analysis-title">Error</div><div class="analysis-text">${escapeHtml(e.message)}</div></div>`;
+        }
+      } finally {
+        askBtn.disabled = false;
+        askBtn.textContent = "Ask assistant";
       }
     });
   }
@@ -2662,7 +2828,7 @@ async function loadSymptomHistory() {
         ? analysisPreviewRaw.substring(0, 140) + (analysisPreviewRaw.length > 140 ? "..." : "")
         : "Analysis not available";
       html += `
-        <div class="symptom-entry">
+        <div class="symptom-entry" role="button" tabindex="0" onclick="viewFullAnalysis('${escapeHtml(String(symptom.id || ""))}')">
           <div class="symptom-header">
             <span class="symptom-date">${date}</span>
             <span class="severity-badge ${severityClass}">${symptom.severity}</span>
@@ -2673,7 +2839,7 @@ async function loadSymptomHistory() {
           </div>
           <button class="btn small view-analysis-btn"
             data-symptom-id="${escapeHtml(String(symptom.id || ""))}"
-            onclick="viewFullAnalysis(this.getAttribute('data-symptom-id'))"
+            onclick="event.stopPropagation(); viewFullAnalysis(this.getAttribute('data-symptom-id'))"
           >View Full Analysis</button>
         </div>
       `;
@@ -2820,6 +2986,7 @@ function renderHeader() {
 function renderNav() {
   const items = [
     ["dashboard", "📈"],
+    // doctor-only page is inserted below (after dashboard) when applicable
     ["symptoms", "🩺"],
     ["reminders", "🔔"],
     ["devices", "⌚"],
@@ -2828,6 +2995,9 @@ function renderNav() {
     ["reports", "📊"],
     ["complaints", "📝"],
   ];
+  if (currentUser?.role === "doctor") {
+    items.splice(1, 0, ["doctor-chat", "💬"]);
+  }
   const isDesktop = window.innerWidth >= 768;
   let html = `<nav class="${isDesktop ? "sidebar" : "main-nav"}" aria-label="Primary"><div ${isDesktop ? "" : 'class="nav-scroll"'}>`;
   items.forEach(([page, icon]) => {
