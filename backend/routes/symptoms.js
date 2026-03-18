@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 // Primary endpoints for symptom entries
 router.post('/', auth, controller.createEntry);
 router.get('/', auth, controller.listForUser);
+router.delete('/', auth, controller.clearForUser);
 
 // alias for analysis route if needed
 router.post('/analyze', auth, controller.createEntry);

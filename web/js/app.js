@@ -276,6 +276,10 @@ const translations = {
     noReportsGenerated: "No reports generated",
     noComplaintsFound: "No complaints found.",
     history: "History",
+    clearHistory: "Clear history",
+    confirmClearHistory: "Clear your symptom history? This cannot be undone.",
+    historyCleared: "History cleared.",
+    clearHistoryFailed: "Failed to clear history.",
     noSymptomsLogged: "No symptoms logged yet.",
     heartRate: "Heart Rate",
     bloodPressure: "Blood Pressure",
@@ -378,6 +382,10 @@ const translations = {
     noReportsGenerated: "Есептер жоқ",
     noComplaintsFound: "Шағымдар табылмады.",
     history: "Тарих",
+    clearHistory: "Тарихты тазалау",
+    confirmClearHistory: "Симптомдар тарихын тазалайсыз ба? Қайтарылмайды.",
+    historyCleared: "Тарих тазаланды.",
+    clearHistoryFailed: "Тарихты тазалау сәтсіз аяқталды.",
     noSymptomsLogged: "Симптомдар сақталмады.",
     heartRate: "Жүрек соғысы",
     bloodPressure: "Қан қысымы",
@@ -480,6 +488,10 @@ const translations = {
     noReportsGenerated: "Отчётов нет",
     noComplaintsFound: "Жалоб не найдено.",
     history: "История",
+    clearHistory: "Очистить историю",
+    confirmClearHistory: "Очистить историю симптомов? Это действие нельзя отменить.",
+    historyCleared: "История очищена.",
+    clearHistoryFailed: "Не удалось очистить историю.",
     noSymptomsLogged: "Симптомы не зарегистрированы.",
     heartRate: "Пульс",
     bloodPressure: "Артериальное давление",
@@ -1653,7 +1665,7 @@ async function loadComplaints() {
   }
 }
 
-// ===== OTHER PAGES (STUB) =====
+  // ===== OTHER PAGES (STUB) =====
 function renderSymptoms() {
   // form to log new symptom plus history list
   return `${renderHeader()}${renderNav()}<main class="container">
@@ -1668,7 +1680,10 @@ function renderSymptoms() {
         </form>
       </div>
       <div class="card">
-        <h3>${t("history") || "History"}</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h3 style="margin:0;">${t("history") || "History"}</h3>
+          <button id="clear-symptoms-btn" class="btn secondary small">${t("clearHistory") || "Clear history"}</button>
+        </div>
         <div id="symptom-history" class="empty-state">${t("noSymptomsLogged") || "No symptoms logged yet."}</div>
       </div>
     </main>${renderFooter()}`;
@@ -1676,6 +1691,23 @@ function renderSymptoms() {
 
 function attachSymptomsHandlers() {
   loadSymptomHistory();
+  const clearBtn = document.getElementById("clear-symptoms-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", async () => {
+      const msg =
+        t("confirmClearHistory") ||
+        "Are you sure you want to clear your symptom history?";
+      if (!confirm(msg)) return;
+      try {
+        await apiCall("/symptoms", "DELETE");
+        await loadSymptomHistory();
+        alert(t("historyCleared") || "History cleared.");
+      } catch (err) {
+        console.error("Clear symptom history failed:", err);
+        alert(t("clearHistoryFailed") || "Failed to clear history.");
+      }
+    });
+  }
 }
 
 function renderReminders() {
@@ -2617,19 +2649,28 @@ async function loadSymptomHistory() {
           <div class="symptom-analysis-preview">
             ${escapeHtml(analysisPreview)}
           </div>
-          <button class="btn small view-analysis-btn" data-symptom-id="${escapeHtml(String(symptom.id || ""))}">View Full Analysis</button>
+          <button class="btn small view-analysis-btn"
+            data-symptom-id="${escapeHtml(String(symptom.id || ""))}"
+            onclick="viewFullAnalysis(this.getAttribute('data-symptom-id'))"
+          >View Full Analysis</button>
         </div>
       `;
     });
     html += "</div>";
     historyDiv.innerHTML = html;
 
-    historyDiv.querySelectorAll(".view-analysis-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
+    // One delegated listener (more reliable than per-button listeners across rerenders).
+    if (!historyDiv.__analysisClickBound) {
+      historyDiv.addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest
+          ? e.target.closest(".view-analysis-btn")
+          : null;
+        if (!btn) return;
         const id = btn.getAttribute("data-symptom-id");
         viewFullAnalysis(id);
       });
-    });
+      historyDiv.__analysisClickBound = true;
+    }
   } catch (err) {
     console.error("Load symptoms failed:", err);
     document.getElementById("symptom-history").innerHTML =

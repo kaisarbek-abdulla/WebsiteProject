@@ -48,7 +48,7 @@ function localStructuredAnalysis(symptomText, preferredLang) {
 
   const pickAnalysis = () => {
     if (lang === 'ru') return analysisRu;
-    if (lang === 'kk') return analysisKk;
+    if (lang === 'kk' || lang === 'kz') return analysisKk;
     if (lang === 'en') return analysisEn;
     return hasCyr ? analysisRu : analysisEn;
   };
@@ -129,7 +129,7 @@ async function analyzeWithGrok(symptomText, preferredLang) {
     if (!process.env.XAI_API_KEY) return { analysis: 'AI unavailable' };
     try {
       const lang = (preferredLang || '').toLowerCase();
-      const langName = lang === 'ru' ? 'Russian' : lang === 'kk' ? 'Kazakh' : 'English';
+      const langName = lang === 'ru' ? 'Russian' : (lang === 'kk' || lang === 'kz') ? 'Kazakh' : 'English';
       const resp = await fetchFn('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -203,7 +203,7 @@ async function analyzeWithGrok(symptomText, preferredLang) {
     for (let idx = 0; idx < modelCandidates.length; idx += 1) {
       const model = modelCandidates[idx];
       const lang = (preferredLang || '').toLowerCase();
-      const langName = lang === 'ru' ? 'Russian' : lang === 'kk' ? 'Kazakh' : 'English';
+      const langName = lang === 'ru' ? 'Russian' : (lang === 'kk' || lang === 'kz') ? 'Kazakh' : 'English';
       const langHint = `Respond in ${langName}.`;
       response = await fetchFn(endpoint, {
         method: 'POST',
@@ -350,5 +350,49 @@ exports.listForUser = (req, res) => {
     }
     const results = store.symptoms.filter(s => s.userId === userId);
     res.json(results);
+  })();
+};
+
+exports.clearForUser = (req, res) => {
+  (async () => {
+    const userId = (req.user && req.user.id) || req.query.userId;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+
+    if (db) {
+      try {
+        const snap = await db.collection('symptoms').where('userId', '==', userId).get();
+        let deleted = 0;
+        let batch = db.batch();
+        let ops = 0;
+        // Firestore batch limit is 500 operations; keep some headroom.
+        for (const doc of snap.docs) {
+          batch.delete(doc.ref);
+          deleted += 1;
+          ops += 1;
+          if (ops >= 450) {
+            // eslint-disable-next-line no-await-in-loop
+            await batch.commit();
+            batch = db.batch();
+            ops = 0;
+          }
+        }
+        if (ops > 0) await batch.commit();
+        return res.json({ deleted });
+      } catch (e) {
+        console.error('Firestore clear symptoms failed:', e.message);
+        return res.status(500).json({ error: 'Failed to clear symptoms' });
+      }
+    }
+
+    // In-memory store fallback
+    let deleted = 0;
+    for (let i = store.symptoms.length - 1; i >= 0; i -= 1) {
+      if (store.symptoms[i] && store.symptoms[i].userId === userId) {
+        store.symptoms.splice(i, 1);
+        deleted += 1;
+      }
+    }
+    store.save();
+    return res.json({ deleted });
   })();
 };
