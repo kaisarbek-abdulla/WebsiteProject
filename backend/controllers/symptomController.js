@@ -65,6 +65,37 @@ function localStructuredAnalysis(symptomText) {
   };
 }
 
+function normalizeAiData(aiData, symptomText) {
+  const base = (aiData && typeof aiData === 'object') ? { ...aiData } : {};
+
+  // Ensure analysis is a printable string for the UI.
+  const candidate =
+    (typeof base.analysis === 'string' && base.analysis) ? base.analysis
+      : (typeof base.aiAnalysis === 'string' && base.aiAnalysis) ? base.aiAnalysis
+        : '';
+
+  if (candidate) {
+    base.analysis = candidate;
+    base.aiAnalysis = candidate;
+  } else {
+    const fallback = localStructuredAnalysis(symptomText);
+    base.analysis = fallback.analysis;
+    base.aiAnalysis = fallback.aiAnalysis;
+    if (!base.detectedSymptoms) base.detectedSymptoms = fallback.detectedSymptoms;
+    if (!base.conditions) base.conditions = fallback.conditions;
+    if (!base.urgency) base.urgency = fallback.urgency;
+    if (!base.disclaimer) base.disclaimer = fallback.disclaimer;
+  }
+
+  // Do not let AI overwrite our UI severity badge class (mild/moderate/severe).
+  if (Object.prototype.hasOwnProperty.call(base, 'severity')) {
+    base.aiSeverity = base.severity;
+    delete base.severity;
+  }
+
+  return base;
+}
+
 // Analyze symptoms using Grok/Groq AI.  Attempts to parse JSON output.
 async function analyzeWithGrok(symptomText) {
   // use GROQ_API_KEY if provided, otherwise fall back to XAI_API_KEY (grok)
@@ -111,33 +142,88 @@ async function analyzeWithGrok(symptomText) {
     }
   }
 
-  try {
-    const response = await fetchFn(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a medical symptom analyzer. Analyze the user\'s symptoms and respond in JSON with the following keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). If you cannot provide a structured response, simply return a text analysis under the "analysis" field. Always include a disclaimer reminding the user to consult a healthcare professional.'
-          },
-          {
-            role: 'user',
-            content: `Please analyze these symptoms: ${symptomText}`
-          }
-        ],
-        model: isGroq ? 'llama3-8b-8192' : 'grok-beta',
-        stream: false,
-        temperature: 0.7
-      })
+  function uniqueNonEmpty(arr) {
+    const out = [];
+    const seen = new Set();
+    (arr || []).forEach((v) => {
+      const s = (v || '').toString().trim();
+      if (!s) return;
+      if (seen.has(s)) return;
+      seen.add(s);
+      out.push(s);
     });
+    return out;
+  }
+
+  const groqModels = uniqueNonEmpty([
+    process.env.GROQ_MODEL,
+    // Default modern Groq models (can change; env override recommended for Railway).
+    'llama-3.1-8b-instant',
+    'llama-3.1-70b-versatile',
+    'llama-3.3-70b-versatile',
+    'mixtral-8x7b-32768',
+    'gemma2-9b-it',
+  ]);
+
+  try {
+    const modelCandidates = isGroq ? groqModels : ['grok-beta'];
+    let response;
+    let lastErrText = '';
+    let lastErrJson;
+
+    for (let idx = 0; idx < modelCandidates.length; idx += 1) {
+      const model = modelCandidates[idx];
+      response = await fetchFn(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a medical symptom analyzer. Analyze the user\'s symptoms and respond in JSON with the following keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). If you cannot provide a structured response, simply return a text analysis under the "analysis" field. Always include a disclaimer reminding the user to consult a healthcare professional.'
+            },
+            {
+              role: 'user',
+              content: `Please analyze these symptoms: ${symptomText}`
+            }
+          ],
+          model,
+          stream: false,
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) break;
+
+      // Try to detect model deprecation / unsupported model and retry with next candidate.
+      lastErrText = await response.text().catch(() => '<no body>');
+      try { lastErrJson = JSON.parse(lastErrText); } catch { lastErrJson = undefined; }
+
+      const msg = (lastErrJson && lastErrJson.error && lastErrJson.error.message)
+        ? String(lastErrJson.error.message)
+        : String(lastErrText || '');
+      const code = (lastErrJson && lastErrJson.error && lastErrJson.error.code)
+        ? String(lastErrJson.error.code)
+        : '';
+      const looksLikeModelIssue =
+        code === 'model_decommissioned' ||
+        /decommissioned|no longer supported|unsupported model|model not found/i.test(msg);
+
+      if (looksLikeModelIssue && idx < modelCandidates.length - 1) {
+        console.warn(`Groq model "${model}" not usable (${code || 'model_error'}). Retrying with next model...`);
+        continue;
+      }
+
+      // Non-model-related error or no more models to try -> break and handle below.
+      break;
+    }
 
     if (!response.ok) {
-      const text = await response.text().catch(() => '<no body>');
+      const text = lastErrText || await response.text().catch(() => '<no body>');
       console.error('AI API returned error status', response.status, text);
       // if groq failed with authentication or other error, try fallback to grok
       if (isGroq && process.env.XAI_API_KEY) {
@@ -172,7 +258,8 @@ exports.createEntry = async (req, res) => {
 
   try {
     // Get structured AI analysis (object) from Grok/Groq
-    const aiData = await analyzeWithGrok(textInput);
+    const aiDataRaw = await analyzeWithGrok(textInput);
+    const aiData = normalizeAiData(aiDataRaw, textInput);
 
     // Parse basic symptoms for categorization (keep simple keyword matching for now)
     const parsedSymptoms = parseText(textInput);

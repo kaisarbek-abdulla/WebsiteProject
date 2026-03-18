@@ -2466,7 +2466,6 @@ function showSymptomAnalysis(result) {
   let analysis =
     safeResult.aiAnalysis ||
     safeResult.analysis ||
-    safeResult.text ||
     "No analysis available.";
   if (typeof analysis !== "string")
     analysis = String(analysis || "No analysis available.");
@@ -2593,7 +2592,9 @@ async function loadSymptomHistory() {
       const analysisPreviewRaw =
         (typeof symptom.aiAnalysis === "string" && symptom.aiAnalysis) ||
         (typeof symptom.analysis === "string" && symptom.analysis) ||
-        "";
+        (Array.isArray(symptom.conditions) && symptom.conditions.length
+          ? `Possible: ${symptom.conditions.slice(0, 3).join(", ")}`
+          : "");
       const analysisPreview = analysisPreviewRaw
         ? analysisPreviewRaw.substring(0, 140) + (analysisPreviewRaw.length > 140 ? "..." : "")
         : "Analysis not available";
