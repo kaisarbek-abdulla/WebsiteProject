@@ -346,6 +346,19 @@ const translations = {
     previousSubmissions: "Previous submissions",
     noSubmissionsYet: "You haven't submitted anything yet.",
     reminderRequired: "Please enter a reminder message.",
+    reminderWhen: "When",
+    delete: "Delete",
+    deleteAll: "Delete all",
+    confirmDeleteReminder: "Delete this reminder?",
+    confirmDeleteAllReminders: "Delete all reminders?",
+    done: "Done",
+    pending: "Pending",
+    overdue: "Overdue",
+    soon: "Soon",
+    markDone: "Mark done",
+    undo: "Undo",
+    added: "Added",
+    viewAll: "View all",
     connectedLabel: "Connected",
     connectDate: "Connected",
     disconnect: "Disconnect",
@@ -359,6 +372,34 @@ const translations = {
     "doctor-chat": "Chat",
     "admin-chat": "Admin Chat",
     about: "About",
+    back: "Back",
+    profileSettings: "Profile Settings",
+    personalInformation: "Personal Information",
+    healthInformation: "Health Information",
+    emergencyContact: "Emergency Contact",
+    fullName: "Full Name",
+    role: "Role",
+    ageYears: "Age (years)",
+    bloodType: "Blood Type",
+    heightCm: "Height (cm)",
+    weightKg: "Weight (kg)",
+    phoneNumber: "Phone Number",
+    allergies: "Allergies",
+    currentMedications: "Current Medications",
+    medicalHistory: "Medical History",
+    saveProfile: "Save Profile",
+    adminMessages: "Admin messages",
+    adminMessagesSubtitle: "Read-only updates from the admin team.",
+    enterFullName: "Enter your full name",
+    enterAge: "Enter your age",
+    selectBloodType: "-- Select Blood Type --",
+    enterAllergies: "List any known allergies (e.g., Penicillin, Peanuts)",
+    enterMedications: "List current medications with dosages",
+    enterMedicalHistory: "Relevant medical history, conditions, surgeries, etc.",
+    enterEmergencyContact: "Name and phone number of emergency contact",
+    patient: "Patient",
+    doctor: "Doctor",
+    admin: "Administrator",
   },
   kz: {
     welcome: "Қош келдіңіз",
@@ -455,6 +496,19 @@ const translations = {
     previousSubmissions: "Алдыңғы жіберілгендер",
     noSubmissionsYet: "Сіз әлі ештеңе жібермедіңіз.",
     reminderRequired: "Еске салғыш мәтінін енгізіңіз.",
+    reminderWhen: "Қашан",
+    delete: "Жою",
+    deleteAll: "Барлығын жою",
+    confirmDeleteReminder: "Осы еске салғышты жоясыз ба?",
+    confirmDeleteAllReminders: "Барлық еске салғыштарды жоясыз ба?",
+    done: "Орындалды",
+    pending: "Күтуде",
+    overdue: "Кешікті",
+    soon: "Жақында",
+    markDone: "Орындалды деп белгілеу",
+    undo: "Қайтару",
+    added: "Қосылды",
+    viewAll: "Барлығын көру",
     connectedLabel: "Қосылған",
     connectDate: "Қосылған",
     disconnect: "Өшіру",
@@ -468,6 +522,34 @@ const translations = {
     "doctor-chat": "Чат",
     "admin-chat": "Админ чат",
     about: "Біз туралы",
+    back: "Артқа",
+    profileSettings: "Профиль баптаулары",
+    personalInformation: "Жеке мәліметтер",
+    healthInformation: "Денсаулық мәліметтері",
+    emergencyContact: "Төтенше байланыс",
+    fullName: "Толық аты",
+    role: "Рөл",
+    ageYears: "Жасы (жыл)",
+    bloodType: "Қан тобы",
+    heightCm: "Бойы (см)",
+    weightKg: "Салмақ (кг)",
+    phoneNumber: "Телефон нөмірі",
+    allergies: "Аллергиялар",
+    currentMedications: "Қазіргі дәрілер",
+    medicalHistory: "Медициналық тарих",
+    saveProfile: "Сақтау",
+    adminMessages: "Админ хабарламалары",
+    adminMessagesSubtitle: "Админ командасынан тек оқу режиміндегі жаңартулар.",
+    enterFullName: "Атыңызды енгізіңіз",
+    enterAge: "Жасыңызды енгізіңіз",
+    selectBloodType: "-- Қан тобын таңдаңыз --",
+    enterAllergies: "Белгілі аллергияларды жазыңыз (мыс., Пенициллин, Жержаңғақ)",
+    enterMedications: "Қазіргі дәрілерді және дозасын жазыңыз",
+    enterMedicalHistory: "Маңызды медициналық тарих, аурулар, операциялар және т.б.",
+    enterEmergencyContact: "Төтенше байланыс аты және телефон нөмірі",
+    patient: "Пациент",
+    doctor: "Дәрігер",
+    admin: "Әкімші",
   },
   ru: {
     welcome: "Добро пожаловать",
@@ -565,6 +647,19 @@ const translations = {
     previousSubmissions: "Предыдущие отправки",
     noSubmissionsYet: "Вы ещё ничего не отправили.",
     reminderRequired: "Пожалуйста, введите текст напоминания.",
+    reminderWhen: "Когда",
+    delete: "Удалить",
+    deleteAll: "Удалить все",
+    confirmDeleteReminder: "Удалить это напоминание?",
+    confirmDeleteAllReminders: "Удалить все напоминания?",
+    done: "Готово",
+    pending: "Ожидает",
+    overdue: "Просрочено",
+    soon: "Скоро",
+    markDone: "Отметить как выполнено",
+    undo: "Вернуть",
+    added: "Добавлено",
+    viewAll: "Показать все",
     connectedLabel: "Подключено",
     connectDate: "Подключено",
     disconnect: "Отключить",
@@ -579,6 +674,34 @@ const translations = {
     "doctor-chat": "Чат",
     "admin-chat": "Чат админа",
     about: "О нас",
+    back: "Назад",
+    profileSettings: "Настройки профиля",
+    personalInformation: "Личная информация",
+    healthInformation: "Информация о здоровье",
+    emergencyContact: "Экстренный контакт",
+    fullName: "ФИО",
+    role: "Роль",
+    ageYears: "Возраст (лет)",
+    bloodType: "Группа крови",
+    heightCm: "Рост (см)",
+    weightKg: "Вес (кг)",
+    phoneNumber: "Номер телефона",
+    allergies: "Аллергии",
+    currentMedications: "Текущие лекарства",
+    medicalHistory: "Медицинская история",
+    saveProfile: "Сохранить профиль",
+    adminMessages: "Сообщения админа",
+    adminMessagesSubtitle: "Обновления от админов (только чтение).",
+    enterFullName: "Введите ФИО",
+    enterAge: "Введите возраст",
+    selectBloodType: "-- Выберите группу крови --",
+    enterAllergies: "Перечислите известные аллергии (например, Пенициллин, Арахис)",
+    enterMedications: "Укажите лекарства и дозировки",
+    enterMedicalHistory: "История болезней, состояния, операции и т.д.",
+    enterEmergencyContact: "Имя и номер телефона экстренного контакта",
+    patient: "Пациент",
+    doctor: "Врач",
+    admin: "Администратор",
   },
 };
 function t(key) {
@@ -937,7 +1060,7 @@ function renderDashboard() {
 }
 
 function renderPatientDashboard() {
-  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminders = getRemindersFromStorage();
   const reminderCount = reminders.length;
   const vitalsCount = JSON.parse(
     localStorage.getItem("userVitals") || "[]",
@@ -945,6 +1068,42 @@ function renderPatientDashboard() {
   const devicesCount = JSON.parse(
     localStorage.getItem("localDevices") || "[]",
   ).length;
+
+  const upcoming = reminders
+    .filter((r) => r && !r.done)
+    .slice()
+    .sort((a, b) => {
+      const ad = a.dueAt ? new Date(a.dueAt).getTime() : new Date(a.createdAt).getTime();
+      const bd = b.dueAt ? new Date(b.dueAt).getTime() : new Date(b.createdAt).getTime();
+      return ad - bd;
+    })
+    .slice(0, 3);
+
+  function reminderMini(r) {
+    const due = r.dueAt ? new Date(r.dueAt) : null;
+    const created = r.createdAt ? new Date(r.createdAt) : null;
+    const meta = due
+      ? `${escapeHtml(t("reminderWhen") || "When")}: ${escapeHtml(due.toLocaleString())}`
+      : `${escapeHtml(t("added") || "Added")}: ${escapeHtml((created || new Date()).toLocaleString())}`;
+    const now = Date.now();
+    const dueMs = due ? due.getTime() : null;
+    const isOverdue = dueMs != null && dueMs < now - 60 * 1000;
+    const isSoon = dueMs != null && dueMs >= now - 60 * 1000 && dueMs <= now + 60 * 60 * 1000;
+    const badge = isOverdue
+      ? `<span class="rem-badge overdue">${escapeHtml(t("overdue") || "Overdue")}</span>`
+      : isSoon
+        ? `<span class="rem-badge soon">${escapeHtml(t("soon") || "Soon")}</span>`
+        : `<span class="rem-badge">${escapeHtml(t("pending") || "Pending")}</span>`;
+    return `
+      <div class="dash-rem-item">
+        <div class="dash-rem-top">
+          <div class="dash-rem-meta">${meta}</div>
+          ${badge}
+        </div>
+        <div class="dash-rem-msg">${escapeHtml(String(r.message || ""))}</div>
+      </div>
+    `;
+  }
   return `
     ${renderHeader()}
     ${renderNav()}
@@ -1024,11 +1183,31 @@ function renderPatientDashboard() {
         </div>
       </section>
 
+      <section class="row">
+        <div class="card wide">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;">
+            <h4 style="margin:0;">${t("reminders")}</h4>
+            <button class="btn small secondary" type="button" id="dashboard-reminders-btn">${t("viewAll") || "View all"}</button>
+          </div>
+          <div class="dashboard-reminders">
+            ${
+              upcoming.length
+                ? upcoming.map(reminderMini).join("")
+                : `<div class="empty-state">${t("noRemindersYet")}</div>`
+            }
+          </div>
+        </div>
+      </section>
+
       <section class="row lower-row">
         <div class="card half">
           <h4>${t("reminders")}</h4>
           <p class="muted">${t("manageReminders")}</p>
-          <div class="empty-state">🔔 ${t("noReminders")}</div>
+          <div class="empty-state">🔔 ${
+            reminderCount
+              ? `${reminderCount} ${escapeHtml(t("activeReminders") || "Active Reminders")}`
+              : escapeHtml(t("noReminders") || "No reminders set")
+          }</div>
         </div>
         <div class="card half">
           <h4>${t("connectedDevicesTitle")}</h4>
@@ -1321,6 +1500,13 @@ function attachPatientDashboardHandlers() {
   if (vitalsBtn) {
     vitalsBtn.addEventListener("click", () => {
       navigate("vitals");
+    });
+  }
+
+  const remBtn = document.getElementById("dashboard-reminders-btn");
+  if (remBtn) {
+    remBtn.addEventListener("click", () => {
+      navigate("reminders");
     });
   }
 
@@ -2050,24 +2236,39 @@ function attachDoctorAiToolsHandlers() {
 }
 
 function renderReminders() {
-  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminders = getRemindersFromStorage();
   const listHtml =
     reminders.length === 0
       ? `<div class="empty-state">${t("noRemindersYet")}</div>`
-      : `<ul class="reminders-list">${reminders
-          .map(
-            (r) =>
-              `<li class="reminder-item"><strong>${new Date(r.createdAt).toLocaleString()}:</strong> ${r.message}</li>`,
-          )
-          .join("")}</ul>`;
+      : `<div class="reminders-grid">${reminders
+          .slice()
+          .sort((a, b) => {
+            const ad = a.dueAt ? new Date(a.dueAt).getTime() : new Date(a.createdAt).getTime();
+            const bd = b.dueAt ? new Date(b.dueAt).getTime() : new Date(b.createdAt).getTime();
+            return ad - bd;
+          })
+          .map((r) => renderReminderCard(r))
+          .join("")}</div>`;
+
   return `${renderHeader()}${renderNav()}<main class="container">
       <div class="page-header"><h2>${t("reminders")}</h2><p class="subtitle">${t("reminderSubtitle")}</p></div>
+
       <div class="card">
-        <div class="form-group">
-          <label>${t("reminderMessage")}</label>
-          <input id="new-reminder-input" type="text" placeholder="${t("reminderPlaceholder")}"/>
+        <div class="reminders-compose">
+          <div class="form-group" style="margin:0;">
+            <label>${t("reminderMessage")}</label>
+            <input id="new-reminder-input" type="text" placeholder="${t("reminderPlaceholder")}" />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>${t("reminderWhen") || "When"}</label>
+            <input id="new-reminder-when" type="datetime-local" />
+          </div>
+          <div class="reminders-toolbar">
+            <button id="add-reminder-btn" class="btn primary" type="button">${t("addReminder")}</button>
+            <button id="delete-all-reminders" class="btn secondary" type="button">${t("deleteAll") || "Delete all"}</button>
+          </div>
         </div>
-        <button id="add-reminder-btn" class="btn primary">${t("addReminder")}</button>
+
         <div id="reminders-list">${listHtml}</div>
       </div>
     </main>${renderFooter()}`;
@@ -2075,25 +2276,137 @@ function renderReminders() {
 
 function attachRemindersHandlers() {
   const addBtn = document.getElementById("add-reminder-btn");
+  const delAllBtn = document.getElementById("delete-all-reminders");
+  const list = document.getElementById("reminders-list");
+
   if (addBtn) {
     addBtn.addEventListener("click", () => {
       const textEl = document.getElementById("new-reminder-input");
+      const whenEl = document.getElementById("new-reminder-when");
       const text = textEl?.value.trim();
+      const dueAtRaw = whenEl?.value ? String(whenEl.value) : "";
       if (!text) {
         alert(t("reminderRequired"));
         return;
       }
-      const existing = JSON.parse(localStorage.getItem("reminders") || "[]");
+      const existing = getRemindersFromStorage();
       existing.push({
-        id: Date.now(),
+        id: String(Date.now()),
         message: text,
         createdAt: new Date().toISOString(),
+        dueAt: dueAtRaw ? new Date(dueAtRaw).toISOString() : null,
+        done: false,
       });
-      localStorage.setItem("reminders", JSON.stringify(existing));
-      textEl.value = "";
+      saveRemindersToStorage(existing);
+      if (textEl) textEl.value = "";
+      if (whenEl) whenEl.value = "";
       render();
     });
   }
+
+  if (delAllBtn) {
+    delAllBtn.addEventListener("click", () => {
+      const existing = getRemindersFromStorage();
+      if (!existing.length) return;
+      const ok = confirm(t("confirmDeleteAllReminders") || "Delete all reminders?");
+      if (!ok) return;
+      saveRemindersToStorage([]);
+      render();
+    });
+  }
+
+  if (list && !list.__remindersBound) {
+    list.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("[data-rem-action]") : null;
+      if (!btn) return;
+      const action = btn.getAttribute("data-rem-action");
+      const id = btn.getAttribute("data-rem-id");
+      if (!action || !id) return;
+
+      const existing = getRemindersFromStorage();
+      const idx = existing.findIndex((r) => String(r.id) === String(id));
+      if (idx === -1) return;
+
+      if (action === "delete") {
+        const ok = confirm(t("confirmDeleteReminder") || "Delete this reminder?");
+        if (!ok) return;
+        existing.splice(idx, 1);
+        saveRemindersToStorage(existing);
+        render();
+        return;
+      }
+
+      if (action === "toggle") {
+        existing[idx].done = !existing[idx].done;
+        saveRemindersToStorage(existing);
+        render();
+      }
+    });
+    list.__remindersBound = true;
+  }
+}
+
+function getRemindersFromStorage() {
+  let arr = [];
+  try {
+    arr = JSON.parse(localStorage.getItem("reminders") || "[]");
+  } catch (e) {
+    arr = [];
+  }
+  if (!Array.isArray(arr)) return [];
+  // Normalize older shapes
+  return arr
+    .filter((x) => x && typeof x === "object")
+    .map((r) => ({
+      id: String(r.id || Date.now()),
+      message: String(r.message || r.text || ""),
+      createdAt: r.createdAt ? String(r.createdAt) : new Date().toISOString(),
+      dueAt: r.dueAt ? String(r.dueAt) : null,
+      done: !!r.done,
+    }))
+    .filter((r) => r.message.trim().length > 0);
+}
+
+function saveRemindersToStorage(reminders) {
+  const safe = Array.isArray(reminders) ? reminders : [];
+  localStorage.setItem("reminders", JSON.stringify(safe));
+}
+
+function renderReminderCard(r) {
+  const msg = escapeHtml(String(r.message || ""));
+  const due = r.dueAt ? new Date(r.dueAt) : null;
+  const created = r.createdAt ? new Date(r.createdAt) : null;
+  const now = Date.now();
+  const dueMs = due ? due.getTime() : null;
+  const isOverdue = !r.done && dueMs != null && dueMs < now - 60 * 1000;
+  const isSoon = !r.done && dueMs != null && dueMs >= now - 60 * 1000 && dueMs <= now + 60 * 60 * 1000;
+  const badge =
+    r.done ? `<span class="rem-badge done">${escapeHtml(t("done") || "Done")}</span>`
+      : isOverdue ? `<span class="rem-badge overdue">${escapeHtml(t("overdue") || "Overdue")}</span>`
+        : isSoon ? `<span class="rem-badge soon">${escapeHtml(t("soon") || "Soon")}</span>`
+          : `<span class="rem-badge">${escapeHtml(t("pending") || "Pending")}</span>`;
+
+  const meta = due
+    ? `${escapeHtml(t("reminderWhen") || "When")}: ${escapeHtml(due.toLocaleString())}`
+    : `${escapeHtml(t("added") || "Added")}: ${escapeHtml((created || new Date()).toLocaleString())}`;
+
+  return `
+    <div class="rem-card ${r.done ? "is-done" : ""} ${isOverdue ? "is-overdue" : ""}">
+      <div class="rem-head">
+        <div class="rem-meta">${meta}</div>
+        ${badge}
+      </div>
+      <div class="rem-body">${msg}</div>
+      <div class="rem-actions">
+        <button class="btn small ${r.done ? "secondary" : "primary"}" type="button" data-rem-action="toggle" data-rem-id="${escapeHtml(String(r.id))}">
+          ${escapeHtml(r.done ? (t("undo") || "Undo") : (t("markDone") || "Mark done"))}
+        </button>
+        <button class="btn small secondary" type="button" data-rem-action="delete" data-rem-id="${escapeHtml(String(r.id))}">
+          ${escapeHtml(t("delete") || "Delete")}
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 function renderDevices() {
@@ -2525,36 +2838,36 @@ function renderProfile() {
   return `${renderHeader()}${renderNav()}
     <main class="container">
       <div class="card">
-        <h2>Profile Settings</h2>
+        <h2>${t("profileSettings")}</h2>
         <hr style="margin:16px 0; border:none; border-top:1px solid #e0e0e0;">
         
         <form id="profile-form">
           <div class="form-section" style="margin-bottom:24px;">
-            <h3 style="margin-bottom:16px;">Personal Information</h3>
+            <h3 style="margin-bottom:16px;">${t("personalInformation")}</h3>
             <div class="form-group">
-              <label>Full Name</label>
-              <input type="text" id="profile-name" value="${currentUser.name || ""}" placeholder="Enter your full name">
+              <label>${t("fullName")}</label>
+              <input type="text" id="profile-name" value="${currentUser.name || ""}" placeholder="${escapeHtml(t("enterFullName"))}">
             </div>
             <div class="form-group">
               <label>Email</label>
-              <input type="email" value="${currentUser.email || ""}" disabled style="background-color:#f5f5f5; cursor:not-allowed;">
+              <input type="email" value="${currentUser.email || ""}" disabled style="background-color:var(--hover); cursor:not-allowed;">
             </div>
             <div class="form-group">
-              <label>Role</label>
-              <input type="text" value="${{ patient: "Patient", doctor: "Doctor", admin: "Administrator" }[currentUser.role] || "User"}" disabled style="background-color:#f5f5f5; cursor:not-allowed;">
+              <label>${t("role")}</label>
+              <input type="text" value="${escapeHtml(t(currentUser.role) || "User")}" disabled style="background-color:var(--hover); cursor:not-allowed;">
             </div>
           </div>
           
           <div class="form-section" style="margin-bottom:24px;">
-            <h3 style="margin-bottom:16px;">Health Information</h3>
+            <h3 style="margin-bottom:16px;">${t("healthInformation")}</h3>
             <div class="form-group" style="display:inline-block; width:48%; margin-right:4%;">
-              <label>Age (years)</label>
-              <input type="number" id="profile-age" value="${profile.age || ""}" min="0" max="150" placeholder="Enter your age">
+              <label>${t("ageYears")}</label>
+              <input type="number" id="profile-age" value="${profile.age || ""}" min="0" max="150" placeholder="${escapeHtml(t("enterAge"))}">
             </div>
             <div class="form-group" style="display:inline-block; width:48%;">
-              <label>Blood Type</label>
+              <label>${t("bloodType")}</label>
               <select id="profile-bloodType">
-                <option value="">-- Select Blood Type --</option>
+                <option value="">${escapeHtml(t("selectBloodType"))}</option>
                 <option value="O+" ${profile.bloodType === "O+" ? "selected" : ""}>O+</option>
                 <option value="O-" ${profile.bloodType === "O-" ? "selected" : ""}>O-</option>
                 <option value="A+" ${profile.bloodType === "A+" ? "selected" : ""}>A+</option>
@@ -2567,55 +2880,55 @@ function renderProfile() {
             </div>
             
             <div class="form-group" style="display:inline-block; width:32%; margin-right:2%;">
-              <label>Height (cm)</label>
+              <label>${t("heightCm")}</label>
               <input type="number" id="profile-height" value="${profile.height || ""}" min="0" placeholder="cm">
             </div>
             <div class="form-group" style="display:inline-block; width:32%; margin-right:2%;">
-              <label>Weight (kg)</label>
+              <label>${t("weightKg")}</label>
               <input type="number" id="profile-weight" value="${profile.weight || ""}" min="0" placeholder="kg" step="0.1">
             </div>
             <div class="form-group" style="display:inline-block; width:32%;">
-              <label>Phone Number</label>
+              <label>${t("phoneNumber")}</label>
               <input type="tel" id="profile-phone" value="${profile.phoneNumber || ""}" placeholder="+1 (555) 000-0000">
             </div>
             
             <div class="form-group">
-              <label>Allergies</label>
-              <textarea id="profile-allergies" placeholder="List any known allergies (e.g., Penicillin, Peanuts)" style="min-height:60px;">${profile.allergies || ""}</textarea>
+              <label>${t("allergies")}</label>
+              <textarea id="profile-allergies" placeholder="${escapeHtml(t("enterAllergies"))}" style="min-height:60px;">${profile.allergies || ""}</textarea>
             </div>
             
             <div class="form-group">
-              <label>Current Medications</label>
-              <textarea id="profile-medications" placeholder="List current medications with dosages" style="min-height:60px;">${profile.medications || ""}</textarea>
+              <label>${t("currentMedications")}</label>
+              <textarea id="profile-medications" placeholder="${escapeHtml(t("enterMedications"))}" style="min-height:60px;">${profile.medications || ""}</textarea>
             </div>
             
             <div class="form-group">
-              <label>Medical History</label>
-              <textarea id="profile-history" placeholder="Relevant medical history, conditions, surgeries, etc." style="min-height:80px;">${profile.medicalHistory || ""}</textarea>
+              <label>${t("medicalHistory")}</label>
+              <textarea id="profile-history" placeholder="${escapeHtml(t("enterMedicalHistory"))}" style="min-height:80px;">${profile.medicalHistory || ""}</textarea>
             </div>
           </div>
           
           <div class="form-section">
-            <h3 style="margin-bottom:16px;">Emergency Contact</h3>
+            <h3 style="margin-bottom:16px;">${t("emergencyContact")}</h3>
             <div class="form-group">
-              <label>Emergency Contact</label>
-              <input type="text" id="profile-emergency" value="${profile.emergencyContact || ""}" placeholder="Name and phone number of emergency contact">
+              <label>${t("emergencyContact")}</label>
+              <input type="text" id="profile-emergency" value="${profile.emergencyContact || ""}" placeholder="${escapeHtml(t("enterEmergencyContact"))}">
             </div>
           </div>
           
           <div style="margin-top:24px; display:flex; gap:12px;">
-            <button type="submit" class="btn primary">Save Profile</button>
-            <button type="button" class="btn" id="cancel-profile" style="background-color:#f5f5f5; color:#333;">Cancel</button>
+            <button type="submit" class="btn primary">${t("saveProfile")}</button>
+            <button type="button" class="btn" id="cancel-profile" style="background-color:var(--hover); color:var(--text);">${t("cancel")}</button>
             <button type="button" class="btn secondary" onclick="navigate('about')">${t("about") || "About"}</button>
-            <button type="button" class="btn primary" id="logout-btn" style="background-color:#d32f2f; margin-left:auto;">Logout</button>
+            <button type="button" class="btn primary" id="logout-btn" style="background-color:#d32f2f; margin-left:auto;">${t("logout")}</button>
           </div>
         </form>
       </div>
 
       ${showAdminInbox ? `
         <div class="card" style="margin-top:16px;">
-          <h3 style="margin-top:0;">Admin messages</h3>
-          <div class="muted" style="margin-bottom:10px;">Read-only updates from the admin team.</div>
+          <h3 style="margin-top:0;">${t("adminMessages")}</h3>
+          <div class="muted" style="margin-bottom:10px;">${t("adminMessagesSubtitle")}</div>
           <div id="admin-inbox" class="empty-state">No messages.</div>
         </div>
       ` : ""}
@@ -3217,27 +3530,44 @@ function renderAbout() {
 
   const title = isRu ? "О нас" : isKz ? "Біз туралы" : "About Us";
   const subtitle = isRu
-    ? "Команда, история и контакты для поддержки проекта"
+    ? "Команда разработчиков, история проекта и контакты для поддержки"
     : isKz
-      ? "Команда, тарих және байланыс"
-      : "Team, story, and contacts";
+      ? "Команда, жоба тарихы және байланыс"
+      : "Team, project story, and funding contacts";
 
   const story = isRu
     ? [
-        "PULSE родился как идея сделать понятного и полезного помощника для здоровья: чтобы пациент мог быстро описать симптомы, вести простые записи и без лишнего стресса общаться с врачом.",
-        "Мы работали над проектом 10 недель. Первые 6–7 недель мы полностью сфокусировались на веб‑версии: архитектура, роли пользователей, интерфейс, интеграция с API, деплой и стабильность. Это заняло больше всего времени, потому что мы хотели, чтобы сайт выглядел и ощущался как полноценный продукт, а не как «учебная работа».",
-        "Параллельно развивалось и мобильное приложение на Flutter. Сейчас оно ещё на ранней стадии, но мы закладывали основы: стили, навигацию, структуру экранов и интеграции, чтобы позже быстро довести до production‑качества.",
-        "Наш принцип был простой: меньше «пустых функций», больше реального пользовательского пути. Поэтому мы постоянно тестировали сценарии, улучшали UX и делали интерфейс аккуратным в светлой и тёмной теме.",
-        "Мы очень хотим продолжить развитие PULSE после экспо: улучшить аналитику симптомов, сделать отчёты, усилить чат с врачами, добавить реальные интеграции с устройствами и довести мобильное приложение до уровня, когда им можно будет удобно пользоваться каждый день.",
+        "PULSE это 10-недельный командный проект, который делает отслеживание здоровья и связь пациент-врач проще, доступнее и непрерывнее для каждого. Мы хотели, чтобы забота о здоровье не зависела от настроения и памяти: данные должны собираться регулярно и без лишнего стресса.",
+        "Мы стремимся решить ключевые проблемы современной медицины:",
+        "1) Пациенты часто забывают или не успевают фиксировать симптомы, лекарства и показатели (пульс, давление, сон, активность). В итоге врачу достаётся неполная картина.",
+        "2) Общение с врачом обычно ограничено визитами и редкими звонками. Нет удобного способа быстро уточнить вопрос, поделиться обновлением или получить своевременный совет.",
+        "3) История пациента получается «фрагментированной»: разные записи, разные источники, разные даты. Врач тратит время на сбор мозаики, а не на решения.",
+        "PULSE закрывает этот разрыв: пациент ведёт метрики в пару кликов, получает напоминания и понятные подсказки, а врач видит аккуратные отчёты и динамику и может общаться с пациентом через защищённые каналы.",
+        "Текущий прогресс (по итогам 10 недель): мы запустили веб‑версию (наш главный приоритет). В ней есть роли (patient / doctor / admin), UI/UX, backend API, безопасная аутентификация, основные разделы трекинга и встраиваемый чат пациент-врач.",
+        "Параллельно мы развивали мобильное приложение на Flutter. Сейчас оно ещё на ранней стадии, но уже заложены основы: навигация, структура экранов, ввод данных, история и интеграция с web‑backend. Мобильная версия задумана для трекинга «на ходу» и уведомлений.",
+        "Планы после демо: усилить AI инструменты (триаж, подсказки, анализ симптомов), улучшить отчёты (графики, сравнение периодов, подсветка аномалий), расширить чат (вложения, голосовые), и добавить интеграции с Apple Health/Google Fit и популярными wearable устройствами.",
+        "Во время демо/экспо некоторые продвинутые функции могут работать в режиме демонстрации или с mock‑данными, чтобы показать задуманный пользовательский опыт.",
+        "PULSE это не просто трекер. Это мост между ежедневным самоконтролем и профессиональной медицинской поддержкой: для пациентов больше уверенности, для врачей больше точных и структурированных данных.",
       ]
-    : [
-        "PULSE is a 10-week team project focused on making health tracking and patient-doctor communication simple and accessible.",
-        "We shipped a web version first (roles, UI, API, deployment) and are building a Flutter mobile app in parallel (still early-stage).",
-        "After the expo, we plan to improve AI tools, reports, messaging, device integrations, and bring the mobile app to production quality.",
-      ];
+    : isKz
+      ? [
+          "PULSE бұл 10 апталық командалық жоба. Мақсатымыз: денсаулықты бақылау мен пациент-дәрігер байланысын қарапайым және үздіксіз ету.",
+          "Біз алдымен веб-нұсқаны толық іске қостық: рөлдер (patient / doctor / admin), интерфейс, backend API және негізгі бөлімдер.",
+          "Flutter мобильді қосымшасы әзірге ерте кезеңде, бірақ навигация және backend-пен интеграция негізі дайын.",
+          "Келесі қадам: AI құралдары, есептер, чат мүмкіндіктері және wearable интеграцияларын кеңейту.",
+        ]
+      : [
+          "PULSE is a 10-week team project dedicated to making health tracking and patient-doctor communication simple, accessible, and continuous for everyone.",
+          "We address common healthcare pain points: people forget to log symptoms/medications/vitals, communication is limited to occasional visits, and doctors spend time reconstructing fragmented histories.",
+          "PULSE bridges this gap with a unified, secure platform for tracking, reminders, insights, and protected messaging. Doctors get clearer trends and reports for faster decisions.",
+          "Current progress: we launched the web version with user roles, UI/UX, backend API, secure auth, core tracking sections, and in-app messaging. In parallel, we started the Flutter mobile app (early stage) with foundational navigation and API integration.",
+          "Future plans: expand AI tools (triage, coaching), improve reporting and charts, enrich messaging (attachments/voice), add device integrations (Apple Health/Google Fit/wearables), and bring the mobile app to production quality.",
+          "During the expo, some advanced features may run in demo mode or with mock data to showcase the intended user experience.",
+          "PULSE is more than a tracker: it is a reliable bridge between everyday self-monitoring and professional medical support.",
+        ];
 
   const thanks = isRu
-    ? "Спасибо за интерес к PULSE. Любая финансовая или инвестиционная поддержка поможет нам оплачивать инфраструктуру (хостинг/домены), улучшать дизайн и UX, развивать мобильное приложение и добавлять новые полезные функции. Мы обещаем использовать поддержку во благо проекта."
+    ? "Спасибо за интерес к PULSE. Любая финансовая или инвестиционная поддержка поможет нам оплачивать инфраструктуру (хостинг, домены), улучшать дизайн и UX, повышать стабильность и быстрее довести мобильное приложение до production‑качества. Мы обещаем использовать поддержку во благо проекта и его реальных пользователей."
     : isKz
       ? "PULSE жобасына қызығушылық танытқаныңызға рахмет. Қаржылық/инвестициялық қолдау инфрақұрылымды, дизайнды, мобильді қосымшаны және жаңа функцияларды дамытуға жұмсалады."
       : "Thank you for supporting PULSE. Funding helps us cover infrastructure, improve UX/design, grow the mobile app, and build new features responsibly.";
@@ -3247,20 +3577,6 @@ function renderAbout() {
       <div class="page-header">
         <h2>${escapeHtml(title)}</h2>
         <p class="subtitle">${escapeHtml(subtitle)}</p>
-      </div>
-
-      <div class="card">
-        <h3 style="margin-top:0;">${isRu ? "История проекта" : isKz ? "Жоба тарихы" : "Project Story"}</h3>
-        ${story
-          .map((p) => `<p style="margin:10px 0; line-height:1.7;">${escapeHtml(p)}</p>`)
-          .join("")}
-        <p class="muted" style="margin-top:12px;">
-          ${isRu
-            ? "Примечание: в экспо‑сборке часть функций может работать в демо‑режиме, чтобы показать полный опыт даже без подключённых устройств."
-            : isKz
-              ? "Ескерту: Expo нұсқасында кейбір функциялар демо режимінде болуы мүмкін."
-              : "Note: some expo features may run in demo mode to showcase the full experience."}
-        </p>
       </div>
 
       <div class="card">
@@ -3283,6 +3599,20 @@ function renderAbout() {
       </div>
 
       <div class="card">
+        <h3 style="margin-top:0;">${isRu ? "О проекте" : isKz ? "Жоба туралы" : "About the project"}</h3>
+        ${story
+          .map((p) => `<p style="margin:10px 0; line-height:1.7;">${escapeHtml(p)}</p>`)
+          .join("")}
+        <p class="muted" style="margin-top:12px;">
+          ${isRu
+            ? "Примечание: на экспо часть функций может работать в демо‑режиме или с mock‑данными, чтобы показать полный пользовательский путь."
+            : isKz
+              ? "Ескерту: Экспода кейбір функциялар демо режимінде немесе mock деректермен жұмыс істеуі мүмкін."
+              : "Note: at the expo some features may run in demo mode or with mock data to showcase the full flow."}
+        </p>
+      </div>
+
+      <div class="card">
         <h3 style="margin-top:0;">${isRu ? "Контакты для финансовой/инвестиционной поддержки" : isKz ? "Қаржылық/инвестициялық қолдау байланысы" : "Funding / Investment Contact"}</h3>
         <div class="analysis-pills" style="margin-top:10px;">
           <span class="analysis-pill">📞 ${escapeHtml(contactPhone)}</span>
@@ -3292,7 +3622,7 @@ function renderAbout() {
       </div>
 
       <div style="display:flex; gap:10px; justify-content:flex-end;">
-        <button class="btn secondary" type="button" onclick="navigate('profile')">Back</button>
+        <button class="btn secondary" type="button" onclick="navigate('profile')">${t("back") || "Back"}</button>
       </div>
     </main>${renderFooter()}`;
 }
