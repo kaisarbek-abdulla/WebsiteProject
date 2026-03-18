@@ -7,3 +7,6 @@ build/
 
 # Figma exports (contain embedded secrets)
 Healthcare Virtual Assistant*
+
+# Local sandbox helper created by the coding agent
+.gitconfig_codex

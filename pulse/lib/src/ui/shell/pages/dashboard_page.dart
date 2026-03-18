@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../../api/api_exception.dart';
 import '../../../services/auth_service.dart';
+import '../../../state/app_controller.dart';
+import '../../../state/app_scope.dart';
+import '../../../state/vitals_simulator.dart';
 import '../../theme/pulse_theme.dart';
 import '../widgets/pulse_card.dart';
 import '../widgets/pulse_page_scaffold.dart';
@@ -76,25 +79,31 @@ class _DashboardPageState extends State<DashboardPage> {
           LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= 980;
-              final left = Expanded(
-                flex: 7,
-                child: PulseCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Symptom Analysis', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 6),
-                      Text('Describe your symptoms', style: Theme.of(context).textTheme.bodySmall),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _symptoms,
-                        minLines: 4,
-                        maxLines: 8,
-                        decoration: const InputDecoration(
-                          hintText: 'e.g. headache, fatigue, sore throat...',
-                        ),
+              final compact = constraints.maxWidth < 520;
+              final leftCard = PulseCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Symptom Analysis', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text('Describe your symptoms', style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _symptoms,
+                      minLines: compact ? 3 : 4,
+                      maxLines: 8,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. headache, fatigue, sore throat...',
                       ),
-                      const SizedBox(height: 14),
+                    ),
+                    const SizedBox(height: 14),
+                    if (compact)
+                      FilledButton.icon(
+                        onPressed: _busy ? null : _analyze,
+                        icon: const Icon(Icons.search),
+                        label: Text(_busy ? 'Analyzing...' : 'Analyze'),
+                      )
+                    else
                       Align(
                         alignment: Alignment.centerRight,
                         child: FilledButton.icon(
@@ -103,53 +112,102 @@ class _DashboardPageState extends State<DashboardPage> {
                           label: Text(_busy ? 'Analyzing...' : 'Analyze'),
                         ),
                       ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 12),
-                        Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                      ],
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                     ],
-                  ),
+                  ],
                 ),
               );
 
-              final right = Expanded(
-                flex: 4,
-                child: PulseCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _MiniStat(title: 'Symptom\nReports', value: '0', subtitle: 'Symptom Reports'),
+              final rightCard = PulseCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (compact)
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 1.05,
+                        children: const [
+                          _MiniStat(
+                            title: 'Symptom\nReports',
+                            value: '0',
+                            subtitle: 'Reports',
+                            compact: true,
+                          ),
+                          _MiniStat(
+                            title: 'Active\nReminders',
+                            value: '0',
+                            subtitle: 'Reminders',
+                            compact: true,
+                          ),
+                          _MiniStat(
+                            title: 'Connected\nDevices',
+                            value: '0',
+                            subtitle: 'Wearables',
+                            compact: true,
+                          ),
+                          _MiniStat(
+                            title: 'Health\nMetrics',
+                            value: '0',
+                            subtitle: 'Metrics',
+                            compact: true,
+                          ),
+                        ],
+                      )
+                    else ...[
+                      const _MiniStat(
+                        title: 'Symptom\nReports',
+                        value: '0',
+                        subtitle: 'Symptom Reports',
+                      ),
                       const SizedBox(height: 12),
-                      _MiniStat(title: 'Active\nReminders', value: '0', subtitle: 'Manage reminders'),
+                      const _MiniStat(
+                        title: 'Active\nReminders',
+                        value: '0',
+                        subtitle: 'Manage reminders',
+                      ),
                       const SizedBox(height: 12),
-                      _MiniStat(title: 'Connected\nDevices', value: '0', subtitle: 'Wearables'),
+                      const _MiniStat(
+                        title: 'Connected\nDevices',
+                        value: '0',
+                        subtitle: 'Wearables',
+                      ),
                       const SizedBox(height: 12),
-                      _MiniStat(title: 'Health\nMetrics', value: '0', subtitle: 'Health Metrics'),
+                      const _MiniStat(
+                        title: 'Health\nMetrics',
+                        value: '0',
+                        subtitle: 'Health Metrics',
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               );
 
               if (!wide) {
                 return Column(
                   children: [
-                    left,
-                    const SizedBox(height: 16),
-                    right,
+                    leftCard,
+                    const SizedBox(height: 14),
+                    rightCard,
                   ],
                 );
               }
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  left,
+                  Expanded(flex: 7, child: leftCard),
                   const SizedBox(width: 16),
-                  right,
+                  Expanded(flex: 4, child: rightCard),
                 ],
               );
             },
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           PulseCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,23 +218,63 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: Text('Health Metrics', style: Theme.of(context).textTheme.titleMedium),
                     ),
                     FilledButton(
-                      onPressed: () {},
+                      onPressed: () => AppScope.of(context).setSection(AppSection.vitals),
                       child: const Text('View vitals'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: const [
-                    _MetricTile(icon: Icons.favorite, label: 'Heart Rate'),
-                    _MetricTile(icon: Icons.monitor_heart_outlined, label: 'Blood Pressure'),
-                    _MetricTile(icon: Icons.air, label: 'Oxygen'),
-                    _MetricTile(icon: Icons.directions_walk, label: 'Steps'),
-                    _MetricTile(icon: Icons.monitor_weight_outlined, label: 'Weight'),
-                    _MetricTile(icon: Icons.thermostat_outlined, label: 'Temperature'),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final available = constraints.maxWidth;
+                    final cols = available >= 520 ? 3 : 2;
+                    final spacing = 12.0;
+                    final tileWidth = ((available - spacing * (cols - 1)) / cols)
+                        .clamp(140.0, 210.0)
+                        .toDouble();
+                    final compact = available < 520;
+
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      children: [
+                        _LiveMetricTile(
+                          width: tileWidth,
+                          kind: _LiveMetricKind.heartRate,
+                          compact: compact,
+                        ),
+                        _MetricTile(
+                          width: tileWidth,
+                          icon: Icons.monitor_heart_outlined,
+                          label: 'Blood Pressure',
+                          compact: compact,
+                        ),
+                        _MetricTile(
+                          width: tileWidth,
+                          icon: Icons.air,
+                          label: 'Oxygen',
+                          compact: compact,
+                        ),
+                        _LiveMetricTile(
+                          width: tileWidth,
+                          kind: _LiveMetricKind.steps,
+                          compact: compact,
+                        ),
+                        _MetricTile(
+                          width: tileWidth,
+                          icon: Icons.monitor_weight_outlined,
+                          label: 'Weight',
+                          compact: compact,
+                        ),
+                        _MetricTile(
+                          width: tileWidth,
+                          icon: Icons.thermostat_outlined,
+                          label: 'Temperature',
+                          compact: compact,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -192,11 +290,13 @@ class _MiniStat extends StatelessWidget {
     required this.title,
     required this.value,
     required this.subtitle,
+    this.compact = false,
   });
 
   final String title;
   final String value;
   final String subtitle;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +305,7 @@ class _MiniStat extends StatelessWidget {
     final bg = isDark ? const Color(0xFF262844) : const Color(0xFFF8FAFC);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(compact ? 12 : 14),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(14),
@@ -216,29 +316,46 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(
             title.toUpperCase(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(letterSpacing: 1.2),
+            maxLines: compact ? 2 : null,
+            overflow: compact ? TextOverflow.ellipsis : TextOverflow.visible,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  letterSpacing: 1.2,
+                  fontSize: compact ? 11 : null,
+                ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 6 : 8),
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: PulseTheme.brandBlue,
-                  fontSize: 30,
+                  fontSize: compact ? 26 : 30,
                 ),
           ),
-          const SizedBox(height: 6),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+          SizedBox(height: compact ? 4 : 6),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({required this.icon, required this.label});
+enum _LiveMetricKind { heartRate, steps }
 
-  final IconData icon;
-  final String label;
+class _LiveMetricTile extends StatelessWidget {
+  const _LiveMetricTile({
+    required this.width,
+    required this.kind,
+    required this.compact,
+  });
+
+  final double width;
+  final _LiveMetricKind kind;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -248,9 +365,79 @@ class _MetricTile extends StatelessWidget {
     final fg = isDark ? PulseTheme.brandBlue.withOpacity(0.95) : PulseTheme.brandBlue;
 
     return SizedBox(
-      width: 172,
+      width: width,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(compact ? 12 : 14),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: border),
+        ),
+        child: ValueListenableBuilder(
+          valueListenable: vitalsSimulator,
+          builder: (context, snap, _) {
+            final icon = kind == _LiveMetricKind.heartRate ? Icons.favorite : Icons.directions_walk;
+            final title = kind == _LiveMetricKind.heartRate ? 'Heart Rate' : 'Steps';
+            final value = kind == _LiveMetricKind.heartRate ? '${snap.heartRateBpm}' : '${snap.steps}';
+            final unit = kind == _LiveMetricKind.heartRate ? 'BPM' : 'today';
+
+            return Column(
+              children: [
+                Icon(icon, color: fg, size: compact ? 22 : 24),
+                SizedBox(height: compact ? 8 : 10),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: fg,
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 13 : 14,
+                  ),
+                ),
+                SizedBox(height: compact ? 8 : 10),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: fg,
+                    fontWeight: FontWeight.w900,
+                    fontSize: compact ? 22 : 24,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(unit, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.compact,
+  });
+
+  final double width;
+  final IconData icon;
+  final String label;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final border = isDark ? PulseTheme.darkBorder : PulseTheme.border;
+    final bg = isDark ? const Color(0xFF262844) : const Color(0xFFF8FAFC);
+    final fg = isDark ? PulseTheme.brandBlue.withOpacity(0.95) : PulseTheme.brandBlue;
+
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: EdgeInsets.all(compact ? 12 : 14),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(14),
@@ -258,10 +445,18 @@ class _MetricTile extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: fg),
-            const SizedBox(height: 10),
-            Text(label, style: TextStyle(color: fg, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
+            Icon(icon, color: fg, size: compact ? 22 : 24),
+            SizedBox(height: compact ? 8 : 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: fg,
+                fontWeight: FontWeight.w700,
+                fontSize: compact ? 13 : 14,
+              ),
+            ),
+            SizedBox(height: compact ? 3 : 4),
             Text('No data', style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
@@ -269,4 +464,3 @@ class _MetricTile extends StatelessWidget {
     );
   }
 }
-

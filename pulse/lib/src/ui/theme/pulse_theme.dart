@@ -34,6 +34,8 @@ class PulseTheme {
       colorScheme: colorScheme,
     );
 
+    final tt = base.textTheme.apply(bodyColor: ink, displayColor: ink);
+
     return base.copyWith(
       scaffoldBackgroundColor: bg,
       appBarTheme: const AppBarTheme(
@@ -85,17 +87,13 @@ class PulseTheme {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
-      textTheme: base.textTheme.copyWith(
-        headlineSmall: base.textTheme.headlineSmall?.copyWith(
+      textTheme: tt.copyWith(
+        headlineSmall: tt.headlineSmall?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: -0.25,
-          color: ink,
         ),
-        titleMedium: base.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: ink,
-        ),
-        bodySmall: base.textTheme.bodySmall?.copyWith(color: muted),
+        titleMedium: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        bodySmall: tt.bodySmall?.copyWith(color: muted),
       ),
     );
   }
@@ -117,6 +115,8 @@ class PulseTheme {
       colorScheme: colorScheme,
       brightness: Brightness.dark,
     );
+
+    final tt = base.textTheme.apply(bodyColor: darkText, displayColor: darkText);
 
     return base.copyWith(
       scaffoldBackgroundColor: darkBgBottom,
@@ -169,18 +169,14 @@ class PulseTheme {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
-      textTheme: base.textTheme.copyWith(
-        headlineSmall: base.textTheme.headlineSmall?.copyWith(
+      textTheme: tt.copyWith(
+        headlineSmall: tt.headlineSmall?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: -0.25,
-          color: darkText,
         ),
-        titleMedium: base.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: darkText,
-        ),
-        bodySmall: base.textTheme.bodySmall?.copyWith(color: darkMuted),
-        bodyMedium: base.textTheme.bodyMedium?.copyWith(color: darkText),
+        titleMedium: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        bodySmall: tt.bodySmall?.copyWith(color: darkMuted),
+        bodyMedium: tt.bodyMedium?.copyWith(color: darkText),
       ),
     );
   }

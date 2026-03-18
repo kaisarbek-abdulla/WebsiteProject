@@ -27,14 +27,14 @@ class _PulseAppState extends State<PulseApp> {
       builder: (context, snapshot) {
         return AppScope(
           controller: _controller,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
+          child: ValueListenableBuilder<ThemeMode>(
+            valueListenable: _controller.themeMode,
+            builder: (context, mode, _) {
               return MaterialApp(
                 title: 'PULSE',
                 theme: PulseTheme.light(),
                 darkTheme: PulseTheme.dark(),
-                themeMode: _controller.themeMode,
+                themeMode: mode,
                 home: _AuthGate(tokenStore: _tokenStore),
               );
             },
@@ -58,12 +58,24 @@ class _AuthGateState extends State<_AuthGate> {
   late final AuthService _authService =
       AuthService(tokenStore: widget.tokenStore);
 
-  Future<String?> _loadToken() => widget.tokenStore.readToken();
+  late Future<String?> _tokenFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _tokenFuture = widget.tokenStore.readToken();
+  }
+
+  void _refreshToken() {
+    setState(() {
+      _tokenFuture = widget.tokenStore.readToken();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String?>(
-      future: _loadToken(),
+      future: _tokenFuture,
       builder: (context, snapshot) {
         final token = snapshot.data;
         if (snapshot.connectionState != ConnectionState.done) {
@@ -73,13 +85,13 @@ class _AuthGateState extends State<_AuthGate> {
         if (token == null || token.isEmpty) {
           return AuthPage(
             authService: _authService,
-            onAuthed: () => setState(() {}),
+            onAuthed: _refreshToken,
           );
         }
 
         return ShellPage(
           authService: _authService,
-          onLogout: () => setState(() {}),
+          onLogout: _refreshToken,
         );
       },
     );

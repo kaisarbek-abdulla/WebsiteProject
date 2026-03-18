@@ -265,18 +265,40 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Row(
-                  children: [
-                    FilledButton(onPressed: () {}, child: const Text('Save Profile')),
-                    const SizedBox(width: 12),
-                    OutlinedButton(onPressed: () {}, child: const Text('Cancel')),
-                    const Spacer(),
-                    FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: PulseTheme.brandBlue),
-                      onPressed: _load,
-                      child: const Text('Reload'),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 520;
+                    if (compact) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          FilledButton(onPressed: () {}, child: const Text('Save Profile')),
+                          const SizedBox(height: 12),
+                          OutlinedButton(onPressed: () {}, child: const Text('Cancel')),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            style: FilledButton.styleFrom(backgroundColor: PulseTheme.brandBlue),
+                            onPressed: _load,
+                            child: const Text('Reload'),
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        FilledButton(onPressed: () {}, child: const Text('Save Profile')),
+                        const SizedBox(width: 12),
+                        OutlinedButton(onPressed: () {}, child: const Text('Cancel')),
+                        const Spacer(),
+                        FilledButton(
+                          style: FilledButton.styleFrom(backgroundColor: PulseTheme.brandBlue),
+                          onPressed: _load,
+                          child: const Text('Reload'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

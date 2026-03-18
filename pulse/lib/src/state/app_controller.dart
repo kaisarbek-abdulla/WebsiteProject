@@ -22,8 +22,7 @@ class AppController extends ChangeNotifier {
   static const _themeKey = 'themeMode';
   static const _langKey = 'lang';
 
-  ThemeMode _themeMode = ThemeMode.dark;
-  ThemeMode get themeMode => _themeMode;
+  final ValueNotifier<ThemeMode> themeMode = ValueNotifier<ThemeMode>(ThemeMode.dark);
 
   AppSection _section = AppSection.dashboard;
   AppSection get section => _section;
@@ -34,7 +33,7 @@ class AppController extends ChangeNotifier {
   Future<void> loadPrefs() async {
     final prefs = await _tokenStore.prefs();
     final rawTheme = prefs.getString(_themeKey) ?? 'dark';
-    _themeMode = switch (rawTheme) {
+    themeMode.value = switch (rawTheme) {
       'light' => ThemeMode.light,
       _ => ThemeMode.dark,
     };
@@ -43,14 +42,13 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    _themeMode = mode;
+    themeMode.value = mode;
     final prefs = await _tokenStore.prefs();
     await prefs.setString(_themeKey, mode == ThemeMode.light ? 'light' : 'dark');
-    notifyListeners();
   }
 
   Future<void> toggleTheme() async {
-    await setThemeMode(_themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+    await setThemeMode(themeMode.value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
   }
 
   void setSection(AppSection section) {
@@ -66,4 +64,3 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 }
-
