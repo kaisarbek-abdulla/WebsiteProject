@@ -20,6 +20,42 @@ function parseText(text) {
   return [...new Set(found)];
 }
 
+function localStructuredAnalysis(symptomText) {
+  const detected = parseText(symptomText);
+  const severity =
+    detected.length >= 3 ? 'High' : detected.length >= 2 ? 'Medium' : 'Low';
+
+  const conditions = [];
+  if (detected.includes('fever') && detected.includes('cough')) conditions.push('Flu', 'Viral infection');
+  if (detected.includes('headache') && detected.includes('fatigue')) conditions.push('Dehydration', 'Stress');
+  if (detected.includes('nausea')) conditions.push('Food poisoning', 'Gastritis');
+  if (detected.includes('pain')) conditions.push('Inflammation');
+  if (conditions.length === 0) conditions.push('Non-specific symptoms');
+
+  const urgent = severity === 'High' ? 'Consult emergency services if symptoms are severe or worsening.' : 'Consult a healthcare professional if symptoms persist.';
+
+  return {
+    detectedSymptoms: detected,
+    urgency: urgent,
+    severity,
+    conditions,
+    analysis:
+      `This is a demo analysis (no external AI key configured). Detected: ${detected.length ? detected.join(', ') : 'none'}.`,
+    treatments: [
+      'Rest and hydration',
+      'Monitor temperature and symptoms',
+      'Over-the-counter medication only as directed',
+    ],
+    diagnosticTests: severity === 'High' ? ['Clinical evaluation', 'CBC', 'Temperature monitoring'] : ['Clinical evaluation if needed'],
+    healthAdvice: [
+      'If you have chest pain, trouble breathing, or fainting: seek urgent care.',
+      'Keep a symptom journal and note duration and triggers.',
+    ],
+    disclaimer:
+      'This analysis is for informational purposes only and is not a substitute for professional medical advice.',
+  };
+}
+
 // Analyze symptoms using Grok/Groq AI.  Attempts to parse JSON output.
 async function analyzeWithGrok(symptomText) {
   // use GROQ_API_KEY if provided, otherwise fall back to XAI_API_KEY (grok)
@@ -28,6 +64,10 @@ async function analyzeWithGrok(symptomText) {
   const endpoint = isGroq
     ? 'https://api.groq.com/openai/v1/chat/completions'
     : 'https://api.x.ai/v1/chat/completions';
+
+  if (!apiKey) {
+    return localStructuredAnalysis(symptomText);
+  }
 
   // helper for fallback call to grok when groq fails
   async function analyzeWithGrokFallback(fallbackText) {
@@ -104,7 +144,7 @@ async function analyzeWithGrok(symptomText) {
     }
   } catch (error) {
     console.error('AI API call failed:', error);
-    return { analysis: 'Unable to analyze symptoms at this time. Please consult a healthcare professional.' };
+    return localStructuredAnalysis(symptomText);
   }
 }
 
@@ -136,6 +176,8 @@ exports.createEntry = async (req, res) => {
 
     if (db) {
       await db.collection('symptoms').doc(entry.id).set(entry);
+    } else {
+      store.addSymptom(entry);
     }
 
     res.json(entry);

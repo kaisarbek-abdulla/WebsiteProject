@@ -2,9 +2,6 @@
 // Use dynamic API base so mobile devices can call the same host/IP the page was served from.
 // The API_BASE helper adapts to the host and protocol of the current page, avoiding hardcoded URLs.
 
-// Visible marker so we can confirm Railway is serving the latest bundle.
-const BUILD_TAG = "expo-web-2026-03-18-01";
-
 const API_BASE = (function () {
   try {
     const host = window.location.host; // includes port
@@ -39,6 +36,10 @@ const VITALS_SIM = {
   heartRate: 76,
   steps: 512,
   goalSteps: 1000,
+  bloodPressure: { sys: 120, dia: 80 },
+  oxygen: 98,
+  temperatureC: 36.7,
+  weightKg: 72.4,
   wave: [0.55, 0.6, 0.52, 0.66, 0.58, 0.62],
 };
 let vitalsSimTimer = null;
@@ -53,6 +54,15 @@ function ensureVitalsSim() {
 
     const burst = Math.random() < 0.12 ? Math.floor(Math.random() * 22) : Math.floor(Math.random() * 7);
     VITALS_SIM.steps += burst;
+
+    // Other vitals: gentle drift (demo only)
+    VITALS_SIM.oxygen = clamp(VITALS_SIM.oxygen + (Math.random() < 0.2 ? (Math.random() < 0.5 ? -1 : 1) : 0), 94, 100);
+    VITALS_SIM.temperatureC = clamp(VITALS_SIM.temperatureC + (Math.random() < 0.18 ? (Math.random() < 0.5 ? -0.1 : 0.1) : 0), 36.1, 37.8);
+    VITALS_SIM.weightKg = clamp(VITALS_SIM.weightKg + (Math.random() < 0.08 ? (Math.random() < 0.5 ? -0.1 : 0.1) : 0), 45, 140);
+    if (Math.random() < 0.14) {
+      VITALS_SIM.bloodPressure.sys = clamp(VITALS_SIM.bloodPressure.sys + (Math.random() < 0.5 ? -1 : 1), 95, 145);
+      VITALS_SIM.bloodPressure.dia = clamp(VITALS_SIM.bloodPressure.dia + (Math.random() < 0.5 ? -1 : 1), 55, 95);
+    }
 
     const normalized = (VITALS_SIM.heartRate - 58) / (122 - 58);
     const noise = (Math.random() - 0.5) * 0.18;
@@ -74,12 +84,28 @@ function renderVitalsSimToDom() {
   if (hrMetric) hrMetric.textContent = `${VITALS_SIM.heartRate} BPM`;
   const stepsMetric = document.getElementById("sim-steps-metric");
   if (stepsMetric) stepsMetric.textContent = `${VITALS_SIM.steps}`;
+  const bpMetric = document.getElementById("sim-bp-metric");
+  if (bpMetric) bpMetric.textContent = `${VITALS_SIM.bloodPressure.sys}/${VITALS_SIM.bloodPressure.dia}`;
+  const o2Metric = document.getElementById("sim-o2-metric");
+  if (o2Metric) o2Metric.textContent = `${VITALS_SIM.oxygen}%`;
+  const tempMetric = document.getElementById("sim-temp-metric");
+  if (tempMetric) tempMetric.textContent = `${Number(VITALS_SIM.temperatureC).toFixed(1)} °C`;
+  const weightMetric = document.getElementById("sim-weight-metric");
+  if (weightMetric) weightMetric.textContent = `${Number(VITALS_SIM.weightKg).toFixed(1)} kg`;
 
   // Vitals page
   const hrText = document.getElementById("sim-hr");
   if (hrText) hrText.textContent = `${VITALS_SIM.heartRate}`;
   const stepsText = document.getElementById("sim-steps");
   if (stepsText) stepsText.textContent = `${VITALS_SIM.steps}`;
+  const bpText = document.getElementById("sim-bp");
+  if (bpText) bpText.textContent = `${VITALS_SIM.bloodPressure.sys}/${VITALS_SIM.bloodPressure.dia}`;
+  const o2Text = document.getElementById("sim-o2");
+  if (o2Text) o2Text.textContent = `${VITALS_SIM.oxygen}%`;
+  const tempText = document.getElementById("sim-temp");
+  if (tempText) tempText.textContent = `${Number(VITALS_SIM.temperatureC).toFixed(1)} °C`;
+  const weightText = document.getElementById("sim-weight");
+  if (weightText) weightText.textContent = `${Number(VITALS_SIM.weightKg).toFixed(1)} kg`;
 
   // Derived quick stats (demo only)
   const kcalEl = document.getElementById("sim-kcal");
@@ -858,11 +884,11 @@ function renderPatientDashboard() {
             </div>
             <div class="metric"> <div class="metric-icon">🩺</div>
               <div class="metric-label">${t("bloodPressure")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-bp-metric">—</div>
             </div>
             <div class="metric"> <div class="metric-icon">🫁</div>
               <div class="metric-label">${t("oxygen")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-o2-metric">—</div>
             </div>
             <div class="metric"> <div class="metric-icon">🥾</div>
               <div class="metric-label">${t("steps")}</div>
@@ -870,11 +896,11 @@ function renderPatientDashboard() {
             </div>
             <div class="metric"> <div class="metric-icon">⚖️</div>
               <div class="metric-label">${t("weight")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-weight-metric">—</div>
             </div>
             <div class="metric"> <div class="metric-icon">🌡️</div>
               <div class="metric-label">${t("temperature")}</div>
-              <div class="metric-value">${t("noData")}</div>
+              <div class="metric-value" id="sim-temp-metric">—</div>
             </div>
           </div>
           <div style="margin-top:12px; text-align:right;"><button id="dashboard-vitals-btn" class="btn primary">${t("viewVitals")}</button></div>
@@ -1715,10 +1741,10 @@ function renderVitals() {
       </div>
 
       <div class="stats-grid" id="vitals-grid">
-        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart">${t("noData")}</div></div>
-        <div class="stat">${t("oxygen")}<br><div class="empty-chart">${t("noData")}</div></div>
-        <div class="stat">${t("temperature")}<br><div class="empty-chart">${t("noData")}</div></div>
-        <div class="stat">${t("weight")}<br><div class="empty-chart">${t("noData")}</div></div>
+        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart" id="sim-bp">—</div></div>
+        <div class="stat">${t("oxygen")}<br><div class="empty-chart" id="sim-o2">—</div></div>
+        <div class="stat">${t("temperature")}<br><div class="empty-chart" id="sim-temp">—</div></div>
+        <div class="stat">${t("weight")}<br><div class="empty-chart" id="sim-weight">—</div></div>
       </div>
       <div class="card" style="margin-top:24px;">
         <h3>${t("recentReadings")}</h3>
@@ -2576,7 +2602,7 @@ function renderNav() {
 }
 
 function renderFooter() {
-  return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant <span class="build-tag">(${BUILD_TAG})</span></footer>`;
+  return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant</footer>`;
 }
 
 // Validate session on page load
