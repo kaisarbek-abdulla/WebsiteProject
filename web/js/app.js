@@ -102,10 +102,49 @@ function renderVitalsSimToDom() {
   if (bpText) bpText.textContent = `${VITALS_SIM.bloodPressure.sys}/${VITALS_SIM.bloodPressure.dia}`;
   const o2Text = document.getElementById("sim-o2");
   if (o2Text) o2Text.textContent = `${VITALS_SIM.oxygen}%`;
+  const o2Big = document.getElementById("sim-o2-big");
+  if (o2Big) o2Big.textContent = String(VITALS_SIM.oxygen);
   const tempText = document.getElementById("sim-temp");
   if (tempText) tempText.textContent = `${Number(VITALS_SIM.temperatureC).toFixed(1)} °C`;
   const weightText = document.getElementById("sim-weight");
   if (weightText) weightText.textContent = `${Number(VITALS_SIM.weightKg).toFixed(1)} kg`;
+
+  // Fancy vitals widgets
+  const thermo = document.getElementById("sim-thermo");
+  if (thermo) {
+    thermo.classList.remove("cold", "ok", "hot");
+    const t = Number(VITALS_SIM.temperatureC);
+    const cls = t < 36.4 ? "cold" : t > 37.4 ? "hot" : "ok";
+    thermo.classList.add(cls);
+    // map 35.0..39.5 to 0..100
+    const p = clamp((t - 35.0) / (39.5 - 35.0), 0, 1);
+    thermo.style.setProperty("--fill", `${Math.round(p * 100)}%`);
+  }
+  const o2Ring = document.getElementById("sim-o2-ring");
+  if (o2Ring) {
+    const p = clamp((Number(VITALS_SIM.oxygen) - 90) / (100 - 90), 0, 1);
+    o2Ring.style.setProperty("--p", `${Math.round(p * 100)}%`);
+    o2Ring.setAttribute("data-level", VITALS_SIM.oxygen >= 96 ? "ok" : VITALS_SIM.oxygen >= 93 ? "warn" : "bad");
+  }
+  const bpWidget = document.getElementById("sim-bp-widget");
+  if (bpWidget) {
+    const sys = Number(VITALS_SIM.bloodPressure.sys);
+    const dia = Number(VITALS_SIM.bloodPressure.dia);
+    const sysP = clamp((sys - 90) / (150 - 90), 0, 1);
+    const diaP = clamp((dia - 50) / (100 - 50), 0, 1);
+    bpWidget.style.setProperty("--sys", `${Math.round(sysP * 100)}%`);
+    bpWidget.style.setProperty("--dia", `${Math.round(diaP * 100)}%`);
+    const lvl = sys <= 130 && dia <= 85 ? "ok" : sys <= 140 && dia <= 90 ? "warn" : "bad";
+    bpWidget.setAttribute("data-level", lvl);
+  }
+  const scale = document.getElementById("sim-scale");
+  if (scale) {
+    const w = Number(VITALS_SIM.weightKg);
+    // 45..140 kg -> -40..+40 deg
+    const t = clamp((w - 45) / (140 - 45), 0, 1);
+    const deg = -40 + t * 80;
+    scale.style.setProperty("--needle", `${deg.toFixed(1)}deg`);
+  }
 
   // Derived quick stats (demo only)
   const kcalEl = document.getElementById("sim-kcal");
@@ -1740,11 +1779,92 @@ function renderVitals() {
         </div>
       </div>
 
-      <div class="stats-grid" id="vitals-grid">
-        <div class="stat">${t("bloodPressure")}<br><div class="empty-chart" id="sim-bp">—</div></div>
-        <div class="stat">${t("oxygen")}<br><div class="empty-chart" id="sim-o2">—</div></div>
-        <div class="stat">${t("temperature")}<br><div class="empty-chart" id="sim-temp">—</div></div>
-        <div class="stat">${t("weight")}<br><div class="empty-chart" id="sim-weight">—</div></div>
+      <div class="vitals-mini-grid">
+        <div class="card vitals-mini-card" id="sim-bp-widget" data-level="ok">
+          <div class="mini-head">
+            <div>
+              <div class="mini-title">${t("bloodPressure")}</div>
+              <div class="mini-sub">SYS / DIA</div>
+            </div>
+            <div class="mini-pill" id="sim-bp">—</div>
+          </div>
+          <div class="bp-bars">
+            <div class="bp-row">
+              <div class="bp-label">SYS</div>
+              <div class="bp-track"><div class="bp-fill sys"></div></div>
+            </div>
+            <div class="bp-row">
+              <div class="bp-label">DIA</div>
+              <div class="bp-track"><div class="bp-fill dia"></div></div>
+            </div>
+          </div>
+          <div class="mini-note">Optimal is around 120/80</div>
+        </div>
+
+        <div class="card vitals-mini-card">
+          <div class="mini-head">
+            <div>
+              <div class="mini-title">${t("oxygen")}</div>
+              <div class="mini-sub">SpO₂</div>
+            </div>
+            <div class="mini-pill" id="sim-o2">—</div>
+          </div>
+          <div class="o2-wrap">
+            <div class="o2-ring" id="sim-o2-ring" style="--p: 70%" data-level="ok">
+              <div class="o2-center">
+                <div class="o2-ic">🫁</div>
+                <div class="o2-big" id="sim-o2-big">—</div>
+                <div class="o2-unit">%</div>
+              </div>
+            </div>
+          </div>
+          <div class="mini-note">Usually 95–100%</div>
+        </div>
+
+        <div class="card vitals-mini-card">
+          <div class="mini-head">
+            <div>
+              <div class="mini-title">${t("temperature")}</div>
+              <div class="mini-sub">Body temperature</div>
+            </div>
+            <div class="mini-pill" id="sim-temp">—</div>
+          </div>
+          <div class="thermo" id="sim-thermo" style="--fill: 50%">
+            <div class="thermo-tube">
+              <div class="thermo-fill"></div>
+            </div>
+            <div class="thermo-bulb"></div>
+            <div class="thermo-scale">
+              <div class="tick">35</div>
+              <div class="tick">36</div>
+              <div class="tick">37</div>
+              <div class="tick">38</div>
+              <div class="tick">39</div>
+            </div>
+          </div>
+          <div class="mini-note">Cold / Normal / Hot colors</div>
+        </div>
+
+        <div class="card vitals-mini-card">
+          <div class="mini-head">
+            <div>
+              <div class="mini-title">${t("weight")}</div>
+              <div class="mini-sub">Body weight</div>
+            </div>
+            <div class="mini-pill" id="sim-weight">—</div>
+          </div>
+          <div class="scale" id="sim-scale">
+            <div class="scale-dial">
+              <div class="scale-arc"></div>
+              <div class="scale-needle"></div>
+              <div class="scale-center"></div>
+            </div>
+            <div class="scale-labels">
+              <span>45</span><span>70</span><span>95</span><span>120</span><span>140</span>
+            </div>
+          </div>
+          <div class="mini-note">Demo weight drift</div>
+        </div>
       </div>
       <div class="card" style="margin-top:24px;">
         <h3>${t("recentReadings")}</h3>
@@ -1770,6 +1890,10 @@ function attachVitalsHandlers() {
 
   ensureVitalsSim();
   renderVitalsSimToDom();
+
+  // sync oxygen big number if present
+  const o2Big = document.getElementById("sim-o2-big");
+  if (o2Big) o2Big.textContent = String(VITALS_SIM.oxygen);
 }
 
 function renderNutrition() {

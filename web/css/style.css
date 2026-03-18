@@ -1109,6 +1109,276 @@ body.dark-mode .wave-wrap {
   margin-top: 2px;
 }
 
+/* Extra mini vitals grid (BP/O2/Temp/Weight) */
+.vitals-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 768px) {
+  .vitals-mini-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.vitals-mini-card {
+  padding: 18px;
+}
+.mini-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mini-title {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-size: 16px;
+}
+.mini-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.mini-pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.mini-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Blood pressure bars */
+.bp-bars {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+.bp-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.bp-label {
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.bp-track {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--hover);
+  overflow: hidden;
+}
+.bp-fill {
+  height: 100%;
+  width: 50%;
+  border-radius: 999px;
+  background: #2b67ff;
+}
+.bp-fill.sys {
+  width: var(--sys, 55%);
+}
+.bp-fill.dia {
+  width: var(--dia, 45%);
+  background: #5f7ef2;
+}
+#sim-bp-widget[data-level="warn"] .bp-fill {
+  background: #f59e0b;
+}
+#sim-bp-widget[data-level="bad"] .bp-fill {
+  background: #ef4444;
+}
+
+/* Oxygen ring */
+.o2-wrap {
+  display: grid;
+  place-items: center;
+  margin-top: 12px;
+}
+.o2-ring {
+  --p: 70%;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background:
+    conic-gradient(#2b67ff var(--p), rgba(0, 0, 0, 0.08) 0);
+  display: grid;
+  place-items: center;
+}
+[data-theme="dark"] .o2-ring,
+body.dark-mode .o2-ring {
+  background:
+    conic-gradient(#2b67ff var(--p), rgba(255, 255, 255, 0.10) 0);
+}
+.o2-ring[data-level="warn"] {
+  background: conic-gradient(#f59e0b var(--p), rgba(0, 0, 0, 0.08) 0);
+}
+.o2-ring[data-level="bad"] {
+  background: conic-gradient(#ef4444 var(--p), rgba(0, 0, 0, 0.08) 0);
+}
+[data-theme="dark"] .o2-ring[data-level="warn"],
+body.dark-mode .o2-ring[data-level="warn"] {
+  background: conic-gradient(#fbbf24 var(--p), rgba(255, 255, 255, 0.10) 0);
+}
+[data-theme="dark"] .o2-ring[data-level="bad"],
+body.dark-mode .o2-ring[data-level="bad"] {
+  background: conic-gradient(#f87171 var(--p), rgba(255, 255, 255, 0.10) 0);
+}
+.o2-center {
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 12px;
+}
+[data-theme="dark"] .o2-center,
+body.dark-mode .o2-center {
+  background: #1f2138;
+  border-color: #3f476f;
+}
+.o2-ic {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.o2-big {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.o2-unit {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+/* Thermometer */
+.thermo {
+  --fill: 50%;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+.thermo-tube {
+  width: 22px;
+  height: 148px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--hover);
+  overflow: hidden;
+  position: relative;
+}
+.thermo-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fill);
+  background: #2b67ff;
+  border-radius: 999px;
+}
+.thermo-bulb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #2b67ff;
+  border: 1px solid var(--border);
+  margin-top: -10px;
+}
+.thermo-scale {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+}
+.thermo.cold .thermo-fill,
+.thermo.cold .thermo-bulb {
+  background: #38bdf8;
+}
+.thermo.ok .thermo-fill,
+.thermo.ok .thermo-bulb {
+  background: #2b67ff;
+}
+.thermo.hot .thermo-fill,
+.thermo.hot .thermo-bulb {
+  background: #ef4444;
+}
+
+/* Scale widget */
+.scale {
+  margin-top: 12px;
+}
+.scale-dial {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--hover);
+  overflow: hidden;
+}
+.scale-arc {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 240px;
+  height: 240px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 10px solid rgba(43, 103, 255, 0.20);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+.scale-needle {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 2px;
+  height: 78px;
+  background: #2b67ff;
+  transform-origin: bottom center;
+  transform: translateX(-50%) rotate(var(--needle, 0deg));
+  border-radius: 2px;
+  box-shadow: 0 0 0 4px rgba(43, 103, 255, 0.10);
+}
+.scale-center {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #2b67ff;
+  transform: translateX(-50%);
+}
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 8px;
+}
 /* ===== Nutrition macros ===== */
 .macro-chips {
   display: flex;
