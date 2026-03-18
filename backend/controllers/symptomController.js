@@ -25,7 +25,7 @@ function parseText(text) {
   return [...new Set(found)];
 }
 
-function localStructuredAnalysis(symptomText) {
+function localStructuredAnalysis(symptomText, preferredLang) {
   const detected = parseText(symptomText);
   const severity =
     detected.length >= 3 ? 'High' : detected.length >= 2 ? 'Medium' : 'Low';
@@ -39,17 +39,28 @@ function localStructuredAnalysis(symptomText) {
 
   const urgent = severity === 'High' ? 'Consult emergency services if symptoms are severe or worsening.' : 'Consult a healthcare professional if symptoms persist.';
 
+  const lang = (preferredLang || '').toLowerCase();
   const hasCyr = /[А-Яа-яЁё]/.test(symptomText || '');
+
   const analysisRu = `Демо-анализ (без внешнего ИИ). Похоже, у вас: ${detected.length ? detected.join(', ') : 'неспецифические симптомы'}. Возможные причины: ${conditions.join(', ')}.\n\nЧто можно сделать сейчас:\n• Отдых и питьё\n• Измерьте температуру\n• Если состояние ухудшается или есть одышка/боль в груди — срочно обратитесь за помощью.\n\nЭто не диагноз.`;
+  const analysisKk = `Демо-талдау (сыртқы ИИ жоқ). Мүмкін белгілер: ${detected.length ? detected.join(', ') : 'нақты емес симптомдар'}. Ықтимал себептер: ${conditions.join(', ')}.\n\nҚазір не істеуге болады:\n• Демалыс және су ішу\n• Температураны өлшеңіз\n• Нашарласа немесе ентігу/кеуде ауыруы болса — жедел көмекке жүгініңіз.\n\nБұл диагноз емес.`;
   const analysisEn = `Demo analysis (no external AI key configured). Detected: ${detected.length ? detected.join(', ') : 'non-specific symptoms'}. Possible causes: ${conditions.join(', ')}.\n\nWhat you can do now:\n• Rest and hydration\n• Monitor temperature\n• If symptoms worsen or you have chest pain/trouble breathing: seek urgent care.\n\nThis is not a diagnosis.`;
+
+  const pickAnalysis = () => {
+    if (lang === 'ru') return analysisRu;
+    if (lang === 'kk') return analysisKk;
+    if (lang === 'en') return analysisEn;
+    return hasCyr ? analysisRu : analysisEn;
+  };
+  const analysisText = pickAnalysis();
 
   return {
     detectedSymptoms: detected,
     urgency: urgent,
     severity,
     conditions,
-    analysis: hasCyr ? analysisRu : analysisEn,
-    aiAnalysis: hasCyr ? analysisRu : analysisEn,
+    analysis: analysisText,
+    aiAnalysis: analysisText,
     treatments: [
       'Rest and hydration',
       'Monitor temperature and symptoms',
@@ -65,7 +76,7 @@ function localStructuredAnalysis(symptomText) {
   };
 }
 
-function normalizeAiData(aiData, symptomText) {
+function normalizeAiData(aiData, symptomText, preferredLang) {
   const base = (aiData && typeof aiData === 'object') ? { ...aiData } : {};
 
   // Ensure analysis is a printable string for the UI.
@@ -78,7 +89,7 @@ function normalizeAiData(aiData, symptomText) {
     base.analysis = candidate;
     base.aiAnalysis = candidate;
   } else {
-    const fallback = localStructuredAnalysis(symptomText);
+    const fallback = localStructuredAnalysis(symptomText, preferredLang);
     base.analysis = fallback.analysis;
     base.aiAnalysis = fallback.aiAnalysis;
     if (!base.detectedSymptoms) base.detectedSymptoms = fallback.detectedSymptoms;
@@ -97,7 +108,7 @@ function normalizeAiData(aiData, symptomText) {
 }
 
 // Analyze symptoms using Grok/Groq AI.  Attempts to parse JSON output.
-async function analyzeWithGrok(symptomText) {
+async function analyzeWithGrok(symptomText, preferredLang) {
   // use GROQ_API_KEY if provided, otherwise fall back to XAI_API_KEY (grok)
   const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY;
   const isGroq = !!process.env.GROQ_API_KEY;
@@ -106,7 +117,7 @@ async function analyzeWithGrok(symptomText) {
     : 'https://api.x.ai/v1/chat/completions';
 
   if (!apiKey) {
-    return localStructuredAnalysis(symptomText);
+    return localStructuredAnalysis(symptomText, preferredLang);
   }
 
   // Hard timeout so the UI doesn't "hang" during expo demos.
@@ -117,6 +128,8 @@ async function analyzeWithGrok(symptomText) {
   async function analyzeWithGrokFallback(fallbackText) {
     if (!process.env.XAI_API_KEY) return { analysis: 'AI unavailable' };
     try {
+      const lang = (preferredLang || '').toLowerCase();
+      const langName = lang === 'ru' ? 'Russian' : lang === 'kk' ? 'Kazakh' : 'English';
       const resp = await fetchFn('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -125,7 +138,7 @@ async function analyzeWithGrok(symptomText) {
         },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: 'Fallback medical symptom analyzer, respond in free text.' },
+            { role: 'system', content: `Fallback medical symptom analyzer. Respond in ${langName}.` },
             { role: 'user', content: `Please analyze these symptoms: ${fallbackText}` }
           ],
           model: 'grok-beta',
@@ -140,6 +153,22 @@ async function analyzeWithGrok(symptomText) {
       console.error('Fallback grok call failed', e);
       return { analysis: 'Fallback analysis unavailable' };
     }
+  }
+
+  function extractJsonFromText(text) {
+    const raw = (text || '').toString().trim();
+    if (!raw) return null;
+
+    // Strip common markdown fences
+    let s = raw;
+    s = s.replace(/^```json\s*/i, '').replace(/^```\s*/i, '');
+    s = s.replace(/```$/i, '').trim();
+
+    // If there's extra prefix/suffix, try the first JSON object region.
+    const first = s.indexOf('{');
+    const last = s.lastIndexOf('}');
+    if (first === -1 || last === -1 || last <= first) return null;
+    return s.slice(first, last + 1);
   }
 
   function uniqueNonEmpty(arr) {
@@ -173,6 +202,9 @@ async function analyzeWithGrok(symptomText) {
 
     for (let idx = 0; idx < modelCandidates.length; idx += 1) {
       const model = modelCandidates[idx];
+      const lang = (preferredLang || '').toLowerCase();
+      const langName = lang === 'ru' ? 'Russian' : lang === 'kk' ? 'Kazakh' : 'English';
+      const langHint = `Respond in ${langName}.`;
       response = await fetchFn(endpoint, {
         method: 'POST',
         headers: {
@@ -184,7 +216,7 @@ async function analyzeWithGrok(symptomText) {
           messages: [
             {
               role: 'system',
-              content: 'You are a medical symptom analyzer. Analyze the user\'s symptoms and respond in JSON with the following keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). If you cannot provide a structured response, simply return a text analysis under the "analysis" field. Always include a disclaimer reminding the user to consult a healthcare professional.'
+              content: `You are a medical symptom analyzer. ${langHint} Return ONLY valid JSON (no markdown, no code fences, no extra text) with these keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). Always include a disclaimer reminding the user to consult a healthcare professional.`
             },
             {
               role: 'user',
@@ -239,12 +271,20 @@ async function analyzeWithGrok(symptomText) {
     try {
       return JSON.parse(content);
     } catch (e) {
+      const extracted = extractJsonFromText(content);
+      if (extracted) {
+        try {
+          return JSON.parse(extracted);
+        } catch (e2) {
+          // ignore and fall back to raw
+        }
+      }
       // if parsing fails, put raw content into analysis field
       return { analysis: content };
     }
   } catch (error) {
     console.error('AI API call failed:', error && error.name ? `${error.name}: ${error.message}` : error);
-    return localStructuredAnalysis(symptomText);
+    return localStructuredAnalysis(symptomText, preferredLang);
   } finally {
     clearTimeout(timeout);
   }
@@ -258,8 +298,9 @@ exports.createEntry = async (req, res) => {
 
   try {
     // Get structured AI analysis (object) from Grok/Groq
-    const aiDataRaw = await analyzeWithGrok(textInput);
-    const aiData = normalizeAiData(aiDataRaw, textInput);
+    const preferredLang = typeof language === 'string' ? language : undefined;
+    const aiDataRaw = await analyzeWithGrok(textInput, preferredLang);
+    const aiData = normalizeAiData(aiDataRaw, textInput, preferredLang);
 
     // Parse basic symptoms for categorization (keep simple keyword matching for now)
     const parsedSymptoms = parseText(textInput);

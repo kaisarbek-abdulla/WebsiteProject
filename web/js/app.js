@@ -1097,7 +1097,10 @@ function attachPatientDashboardHandlers() {
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = "Analyzing...";
 
-        const result = await apiCall("/symptoms/analyze", "POST", { text });
+        const result = await apiCall("/symptoms/analyze", "POST", {
+          text,
+          language: typeof currentLang === "string" ? currentLang : "en",
+        });
         if (!result || typeof result !== "object") {
           throw new Error("Invalid analysis response from server.");
         }
@@ -2376,7 +2379,10 @@ function submitSymptom(e) {
   button.textContent = "Analyzing...";
   button.disabled = true;
 
-  apiCall("/symptoms", "POST", { text })
+  apiCall("/symptoms", "POST", {
+    text,
+    language: typeof currentLang === "string" ? currentLang : "en",
+  })
     .then((result) => {
       // Display the AI analysis
       showSymptomAnalysis(result);
@@ -2585,6 +2591,9 @@ async function loadSymptomHistory() {
       return;
     }
 
+    // Cache for "View Full Analysis" without embedding huge JSON in onclick attributes.
+    window.__symptomHistoryCache = Array.isArray(symptoms) ? symptoms : [];
+
     let html = '<div class="symptoms-history">';
     symptoms.forEach((symptom) => {
       const date = new Date(symptom.timestamp).toLocaleString();
@@ -2608,12 +2617,19 @@ async function loadSymptomHistory() {
           <div class="symptom-analysis-preview">
             ${escapeHtml(analysisPreview)}
           </div>
-          <button class="btn small" onclick="viewFullAnalysis(${JSON.stringify(symptom).replace(/"/g, "&quot;")})">View Full Analysis</button>
+          <button class="btn small view-analysis-btn" data-symptom-id="${escapeHtml(String(symptom.id || ""))}">View Full Analysis</button>
         </div>
       `;
     });
     html += "</div>";
     historyDiv.innerHTML = html;
+
+    historyDiv.querySelectorAll(".view-analysis-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-symptom-id");
+        viewFullAnalysis(id);
+      });
+    });
   } catch (err) {
     console.error("Load symptoms failed:", err);
     document.getElementById("symptom-history").innerHTML =
@@ -2621,8 +2637,12 @@ async function loadSymptomHistory() {
   }
 }
 
-function viewFullAnalysis(symptom) {
-  showSymptomAnalysis(symptom);
+function viewFullAnalysis(symptomId) {
+  const list = Array.isArray(window.__symptomHistoryCache)
+    ? window.__symptomHistoryCache
+    : [];
+  const found = list.find((s) => String(s.id) === String(symptomId));
+  showSymptomAnalysis(found || { text: "-", analysis: "No analysis available." });
 }
 function addFood(e) {
   e.preventDefault();
