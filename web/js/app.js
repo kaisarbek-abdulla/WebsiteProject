@@ -2,6 +2,9 @@
 // Use dynamic API base so mobile devices can call the same host/IP the page was served from.
 // The API_BASE helper adapts to the host and protocol of the current page, avoiding hardcoded URLs.
 
+// Visible marker so we can confirm Railway is serving the latest bundle.
+const BUILD_TAG = "expo-web-2026-03-18-01";
+
 const API_BASE = (function () {
   try {
     const host = window.location.host; // includes port
@@ -2573,7 +2576,7 @@ function renderNav() {
 }
 
 function renderFooter() {
-  return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant</footer>`;
+  return `<footer class="site-footer">&copy; 2026 Healthcare Virtual Assistant <span class="build-tag">(${BUILD_TAG})</span></footer>`;
 }
 
 // Validate session on page load

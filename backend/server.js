@@ -9,15 +9,25 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static assets with cache disabled for JS/CSS/HTML. This avoids "it didn't change" issues during expo demos.
+function noStoreForTextAssets(res, filePath) {
+  const p = String(filePath || '').toLowerCase();
+  if (p.endsWith('.js') || p.endsWith('.css') || p.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
+}
+
 // Serve the web frontend from the `web/` folder (resolved relative to this file)
-app.use(express.static(path.join(__dirname, '..', 'web')));
+app.use(express.static(path.join(__dirname, '..', 'web'), { etag: true, maxAge: 0, setHeaders: noStoreForTextAssets }));
 // Also serve frontend assets (PWA and logos)
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(path.join(__dirname, '..', 'frontend'), { etag: true, maxAge: 0, setHeaders: noStoreForTextAssets }));
 
 // Explicit route for the dashboard HTML
 app.get('/html/index.html', (req, res) => {
   const filePath = path.join(__dirname, '..', 'web', 'html', 'index.html');
   console.log(`[DEBUG] Serving ${req.path} from ${filePath}`);
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(filePath, (err) => {
     if (err) console.error(`[ERROR] sendFile failed: ${err.message}`);
   });
@@ -26,6 +36,7 @@ app.get('/html/index.html', (req, res) => {
 // Simple root redirect to index
 app.get('/', (req, res) => {
   if (req.path === '/') {
+    res.setHeader('Cache-Control', 'no-store');
     return res.sendFile(path.join(__dirname, '..', 'web', 'html', 'index.html'));
   }
   res.send('Welcome to the API');
