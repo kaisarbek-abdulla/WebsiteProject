@@ -13,7 +13,9 @@ const KEYWORDS = {
   headache: ['headache', 'migraine', 'head pain', 'headache'],
   nausea: ['nausea', 'nauseous', 'vomit', 'vomiting', 'sick'],
   fatigue: ['tired', 'fatigue', 'exhausted', 'weak'],
-  pain: ['pain', 'hurts', 'ache', 'aching']
+  pain: ['pain', 'hurts', 'ache', 'aching'],
+  // Basic musculoskeletal hints (for better fallback advice)
+  legPain: ['leg', 'knee', 'ankle', 'foot', 'calf', 'thigh', 'shin', 'heel'],
 };
 
 function parseText(text) {
@@ -216,7 +218,7 @@ async function analyzeWithGrok(symptomText, preferredLang) {
           messages: [
             {
               role: 'system',
-              content: `You are a medical symptom analyzer. ${langHint} Return ONLY valid JSON (no markdown, no code fences, no extra text) with these keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). Always include a disclaimer reminding the user to consult a healthcare professional.`
+              content: `You are a medical symptom analyzer. ${langHint} Return ONLY valid JSON (no markdown, no code fences, no extra text) with these keys: detectedSymptoms (array), urgency (string), severity (string), conditions (array), analysis (string), treatments (array), diagnosticTests (array), healthAdvice (array), disclaimer (string). Make treatments and healthAdvice SPECIFIC to the user's described symptoms and body area; avoid generic tips like "exercise regularly" unless directly relevant. Urgency criteria should be relevant to the complaint (e.g., limb pain red flags vs breathing red flags). Always include a disclaimer reminding the user to consult a healthcare professional.`
             },
             {
               role: 'user',

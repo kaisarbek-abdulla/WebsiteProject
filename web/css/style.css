@@ -1660,13 +1660,13 @@ html {
 }
 
 .analysis-disclaimer {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.24);
   border-radius: 8px;
   padding: 1rem;
   margin-top: 1rem;
   font-size: 0.9rem;
-  color: #856404;
+  color: var(--text);
 }
 
 /* Symptom History Styles */

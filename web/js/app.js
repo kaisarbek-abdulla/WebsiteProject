@@ -29,6 +29,20 @@ if ("serviceWorker" in navigator) {
 let currentUser = null;
 let authToken = localStorage.getItem("authToken") || null;
 
+// ===== Modal helpers (dynamic modals used across pages) =====
+function openDynamicModal(overlayEl) {
+  if (!overlayEl) return;
+  overlayEl.style.display = "flex";
+  // Click outside to close
+  overlayEl.addEventListener("click", (e) => {
+    if (e.target === overlayEl) closeModal();
+  });
+}
+
+function closeModal() {
+  document.querySelectorAll(".modal-overlay.dynamic-modal").forEach((el) => el.remove());
+}
+
 // ===== Demo sims (Vitals + Nutrition helpers) =====
 // These are UI sims for the expo so the site feels alive even without devices/APIs.
 const VITALS_SIM = {
@@ -2450,10 +2464,13 @@ function connectDevice() {
   });
 
   const modal = document.createElement("div");
-  modal.className = "modal-overlay";
+  modal.className = "modal-overlay dynamic-modal";
   modal.innerHTML = `
-    <div class="modal">
-      <h3>${t("connectNewDevice")}</h3>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>${t("connectNewDevice")}</h3>
+        <button onclick="closeModal()" class="modal-close" aria-label="Close">&times;</button>
+      </div>
       <form id="device-connect-form">
         <div class="form-group">
           <label>${t("deviceType")}</label>
@@ -2474,6 +2491,7 @@ function connectDevice() {
   `;
 
   document.body.appendChild(modal);
+  openDynamicModal(modal);
 
   document
     .getElementById("device-connect-form")
@@ -2523,10 +2541,13 @@ function showSymptomAnalysis(result) {
       : "severity-low";
 
   const modal = document.createElement("div");
-  modal.className = "modal-overlay";
+  modal.className = "modal-overlay dynamic-modal";
   modal.innerHTML = `
-    <div class="modal analysis-modal">
-      <h3>${t("symptomAnalysis")}</h3>
+    <div class="modal-content analysis-modal">
+      <div class="modal-header">
+        <h3>${t("symptomAnalysis")}</h3>
+        <button onclick="closeModal()" class="modal-close" aria-label="Close">&times;</button>
+      </div>
       <div class="analysis-content">
         <div class="analysis-section">
           <h4>${t("yourSymptoms")}</h4>
@@ -2553,7 +2574,7 @@ function showSymptomAnalysis(result) {
           <span class="severity-badge ${scoreClass}">${severity}</span>
         </div>
         <div class="analysis-disclaimer">
-          <strong>⚠️ ${t("important")}</strong> ${t("analysisDisclaimer")}
+          <strong>${t("important")}</strong> ${t("analysisDisclaimer")}
         </div>
       </div>
       <div class="modal-actions">
@@ -2562,6 +2583,7 @@ function showSymptomAnalysis(result) {
     </div>
   `;
   document.body.appendChild(modal);
+  openDynamicModal(modal);
 }
 
 async function loadDevices() {
