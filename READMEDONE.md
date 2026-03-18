@@ -1,32 +1,60 @@
 # PULSE
 
-PULSE is a health assistant project with a Node.js/Express backend API, a web UI (served as static files), and a Flutter mobile app in progress.
+PULSE — это проект “AI Health Assistant”: веб‑приложение + Node.js/Express backend API (деплой на Railway) и мобильное приложение на Flutter (ранняя стадия).
 
-## Current Focus (Flutter App)
+Ниже — актуальное описание того, что уже сделано (включая Firestore и Groq), как запускать локально и какие переменные нужны для Railway.
 
-The mobile app lives in `pulse/` and is the primary development target now. The backend stays as the API that the app will call (locally or deployed on Railway).
+---
 
-## Quick Start (Flutter)
+## Что Уже Сделано (по состоянию на 19 марта 2026)
 
-Prereqs:
-- Flutter SDK installed and on PATH
-- Android Studio + Android SDK (or standalone SDK) and at least one emulator/device
+### 1) Хранилище и база данных (персистентность после redeploy)
+Проблема: при редеплое Railway “новые аккаунты пропадали”, потому что данные были только в локальном store.
 
-From the repo:
+Решение:
+- Добавлена опциональная интеграция **Firestore** через `firebase-admin` (работает, если настроены креды).
+- Если Firestore не настроен, система продолжает работать на локальном store (`backend/data/store.json`) без падения.
 
-```bash
-cd WebsiteProject/pulse
-flutter pub get
-flutter run
-```
+Где в коде:
+- `backend/firebase/admin.js` — инициализация Firebase Admin, включение/отключение Firestore.
+- Firestore‑ветки в контроллерах: `authController.js`, `symptomController.js`, `reminderController.js`, `messageController.js`.
 
-Notes:
-- Android emulator uses `10.0.2.2` to reach your PC `localhost`.
-- Physical device needs your PC LAN IP and the backend must bind to `0.0.0.0` (it already does).
+### 2) AI (Groq) для Symptom Analyzer + Doctor Assistant
+Сделано:
+- Подключён **Groq** (OpenAI‑compatible endpoint) для анализа симптомов.
+- Поддержан fallback (если Groq падает) на `XAI_API_KEY` (Grok), либо локальный demo‑анализ без внешнего ключа.
+- В запросах учитывается язык интерфейса (frontend передаёт `language`).
+- Промпт улучшен так, чтобы советы и red flags были **релевантны к жалобе** (например “боль в ноге” → red flags по конечности, а не про дыхание).
 
-## Quick Start (Backend API + Web)
+Где в коде:
+- `backend/controllers/symptomController.js` — анализ, JSON‑парсинг, нормализация ответа.
+- `backend/controllers/aiController.js` + `backend/routes/ai.js` — endpoint “Doctor Assistant”.
 
-Backend entrypoint: `backend/server.js` (defaults to port `5000`).
+Важно:
+- Модель Groq задаётся через `GROQ_MODEL` (по умолчанию используется `llama-3.1-8b-instant`).
+- Если ты видишь ошибку “model decommissioned”, просто поменяй `GROQ_MODEL` в Railway на актуальную модель.
+
+### 3) Веб интерфейс (UI/UX)
+Сделано:
+- Улучшены **Vitals**: добавлена симуляция и значения для метрик, плюс более “живой” дизайн карточек (сердцебиение/шаги и другие).
+- **Reminders**: раздел стал менее “скучным”, добавлены кнопки удаления:
+  - удалить все,
+  - удалить по одному,
+  - отметка done (toggle).
+- Reminders теперь отображаются и на **Dashboard** (мини‑список “upcoming”), а не только в отдельной секции.
+- Страница **About Us**: текст расширен, порядок секций изменён:
+  - Team → About the project (длинный текст) → Funding contact.
+- На **Profile** исправлен перевод: основные заголовки и подписи теперь берутся из `t(...)`, плюс роль (patient/doctor/admin) переводится.
+
+Где в коде:
+- `web/js/app.js` — основной UI (Dashboard/Reminders/About/Profile и логика i18n).
+- `web/css/style.css` — стили (в том числе мини‑reminders на Dashboard).
+
+---
+
+## Быстрый Запуск Backend + Web3
+
+Backend entrypoint: `backend/server.js` (по умолчанию `PORT=5000`).
 
 ```bash
 cd WebsiteProject
@@ -34,36 +62,76 @@ npm install
 npm run dev
 ```
 
-Open:
+Открыть:
 - Web UI: `http://localhost:5000/html/index.html`
 - API base: `http://localhost:5000/api`
 
-LAN access (Windows):
-- The server binds to all interfaces (`0.0.0.0`). If Windows Firewall blocks it, run `scripts/open-port.ps1` as Administrator.
+LAN доступ (Windows):
+- Сервер слушает `0.0.0.0`. Если упираешься в Windows Firewall — используй `scripts/open-port.ps1` (Admin).
 
-## Deployment (Railway)
+---
 
-This repo can be connected to Railway for the backend/web deployment. Set env vars in Railway (at least `JWT_SECRET`, and optionally AI/email settings) and run `npm start`.
+## Быстрый Запуск (Flutter App)
 
-The included `Procfile` (`web: node backend/server.js`) is compatible with simple PaaS deploys.
+Мобильное приложение находится в `pulse/` (ранняя стадия).
 
-## API Overview
+```bash
+cd WebsiteProject/pulse
+flutter pub get
+flutter run
+```
 
-Unless stated otherwise, endpoints require `Authorization: Bearer <JWT>`.
+Сетевые заметки:
+- Android emulator → чтобы достучаться до backend на ПК: используй `10.0.2.2` вместо `localhost`.
+- Физический телефон → используй LAN IP твоего ПК (например `http://192.168.x.x:5000/api`) и убедись, что firewall не режет порт.
+
+---
+
+## Railway Deploy (Веб + Backend)
+
+Подключи репозиторий к Railway и выставь переменные.
+
+Минимум:
+- `JWT_SECRET` — любая длинная случайная строка (можно 32+ символа, например: `a9f1...`).
+
+### Firestore (чтобы аккаунты не пропадали после redeploy)
+1. Firebase Console → Project settings → Service accounts → Generate new private key
+2. В Railway → Variables:
+   - `FIREBASE_SERVICE_ACCOUNT_JSON` = **полное содержимое JSON** (service account)
+
+Примечание:
+- “Одной строкой” делать не обязательно, но в Railway удобнее вставлять в одну строку.
+- PowerShell вариант “в одну строку”:
+  - `(Get-Content .\\serviceAccountKey.json -Raw) -replace \"(\\r?\\n)+\",\"\"`
+
+### Groq (AI)
+- `GROQ_API_KEY` = твой ключ Groq
+- `GROQ_MODEL` = (опционально) модель, например `llama-3.1-8b-instant`
+- `XAI_API_KEY` = (опционально) fallback на Grok
+
+---
+
+## API (основные endpoints)
+
+Обычно требуют `Authorization: Bearer <JWT>`.
 
 Auth:
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/profile`
 
-Symptoms:
-- `POST /api/symptoms` (also accepts `text` or `symptoms` in body)
-- `POST /api/symptoms/analyze` (alias of the same action)
+Symptoms (AI):
+- `POST /api/symptoms` (принимает `text` или `symptoms`)
+- `POST /api/symptoms/analyze` (alias)
 - `GET /api/symptoms`
+- `DELETE /api/symptoms` (очистка истории)
 
 Reminders:
 - `POST /api/reminders`
 - `GET /api/reminders`
+
+AI tools (doctor assistant):
+- `POST /api/ai/doctor-assistant`
 
 Devices:
 - `POST /api/devices/connect`
@@ -74,35 +142,19 @@ Complaints:
 - `POST /api/complaints`
 - `GET /api/complaints`
 
-## Environment Variables
+---
 
-Copy `WebsiteProject/.env.example` to `WebsiteProject/.env` for local dev.
+## Troubleshooting
 
-Common:
-- `PORT` (default `5000`)
-- `JWT_SECRET` (required for any real deployment)
+### “Groq model decommissioned”
+- Поменяй `GROQ_MODEL` в Railway на актуальную модель.
 
-AI symptom analysis:
-- `GROQ_API_KEY` (Groq OpenAI-compatible endpoint)
-- `XAI_API_KEY` (Grok fallback)
-
-Email (reminders):
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
-- If not set, the app uses an Ethereal test account and prints a preview URL in logs.
-
-Storage:
-- Default is file-backed in-memory store at `backend/data/store.json`.
-- Firestore is optional and requires `firebase-admin` installed and credentials set (see `backend/firebase/admin.js`).
-
-## Repo Layout (Relevant)
-
-`WebsiteProject/`
-- `backend/`: Express API + background reminder worker
-- `web/`: Main web UI (served by the backend)
-- `frontend/`: PWA assets (manifest + service worker + icons)
-- `pulse/`: Flutter mobile app (current focus)
+### “Не вижу изменения на сайте без очистки кэша”
+- Иногда PWA/браузер кэширует статические ассеты. После деплоя сделай один раз жёсткое обновление:
+  - ПК: `Ctrl+F5`
+  - Телефон: закрыть вкладку и открыть заново
 
 ---
 
-**Last Updated**: March 17, 2026
-**Status**: Flutter app in progress; backend/web running and deployable (Railway)
+**Last Updated**: March 19, 2026
+**Status**: Web + backend работают и деплоятся на Railway; Flutter app в разработке
